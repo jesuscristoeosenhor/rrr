@@ -7104,14 +7104,27 @@ const HistoricoAlteracoesSocioModal = memo(({ isOpen, onClose, socio }) => {
 });
 
 const FinanceiroPage = memo(() => {
-  const { financeiro, setFinanceiro, tipoUsuario, userLogado, planos } = useAppState();
+  const { 
+    financeiro, setFinanceiro, 
+    socios, 
+    categoriasFinanceiras, 
+    tipoUsuario, userLogado, planos 
+  } = useAppState();
   const { addNotification } = useNotifications();
   
+  const [activeView, setActiveView] = useState('dashboard'); // dashboard, receitas, despesas, distribuicao
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState({
+    categoria: '',
+    periodo: 'mes-atual'
+  });
   const [showModal, setShowModal] = useState(false);
   const [editingTransacao, setEditingTransacao] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [showDistribuicaoModal, setShowDistribuicaoModal] = useState(false);
+  const [periodoRelatorio, setPeriodoRelatorio] = useState({
+    inicio: new Date().toISOString().split('T')[0].replace(/-\d{2}$/, '-01'),
+    fim: new Date().toISOString().split('T')[0]
+  });
 
   // Filtrar dados baseado no tipo de usuário
   const dadosFinanceiros = useMemo(() => {
@@ -7402,6 +7415,310 @@ const FinanceiroPage = memo(() => {
         />
       </div>
     </div>
+  );
+});
+
+// 🆕 Componente para mostrar distribuição de lucros
+const DistribuicaoLucrosContent = memo(({ lucro, socios }) => {
+  const sociosAtivos = socios.filter(s => s.status === 'ativo');
+  const totalPercentual = sociosAtivos.reduce((acc, s) => acc + s.percentualParticipacao, 0);
+  
+  const distribuicao = sociosAtivos.map(socio => ({
+    ...socio,
+    valorDistribuicao: (lucro * socio.percentualParticipacao) / 100
+  }));
+
+  const isValidDistribution = Math.abs(totalPercentual - 100) < 0.01;
+
+  if (!isValidDistribution) {
+    return (
+      <div className="text-center py-8">
+        <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
+        <h3 className="text-lg font-semibold text-red-600 mb-2">
+          Distribuição Inválida
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400">
+          A soma dos percentuais dos sócios deve ser exatamente 100%.
+          <br />
+          Atual: {totalPercentual.toFixed(1)}%
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+          Lucro a Distribuir
+        </h4>
+        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+          R$ {lucro.toFixed(2)}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {distribuicao.map(socio => (
+          <div key={socio.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
+                {socio.nome.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h5 className="font-semibold text-gray-800 dark:text-gray-100">
+                  {socio.nome}
+                </h5>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {socio.percentualParticipacao}% de participação
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-green-600">
+                R$ {socio.valorDistribuicao.toFixed(2)}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
+        <div className="flex justify-between items-center">
+          <span className="font-semibold text-gray-800 dark:text-gray-100">Total:</span>
+          <span className="text-xl font-bold text-blue-600">
+            R$ {distribuicao.reduce((acc, s) => acc + s.valorDistribuicao, 0).toFixed(2)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// 🆕 Modal para transações financeiras
+const TransacaoModal = memo(({ isOpen, onClose, onSave, transacao, categorias }) => {
+  const [formData, setFormData] = useState({
+    tipo: 'receita',
+    categoria: '',
+    subcategoria: '',
+    descricao: '',
+    valor: '',
+    data: new Date().toISOString().split('T')[0],
+    status: 'pago',
+    metodo: '',
+    observacoes: '',
+    aluno: ''
+  });
+  
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (transacao) {
+      setFormData({
+        tipo: transacao.tipo || 'receita',
+        categoria: transacao.categoria || '',
+        subcategoria: transacao.subcategoria || '',
+        descricao: transacao.descricao || '',
+        valor: transacao.valor || '',
+        data: transacao.data || new Date().toISOString().split('T')[0],
+        status: transacao.status || 'pago',
+        metodo: transacao.metodo || '',
+        observacoes: transacao.observacoes || '',
+        aluno: transacao.aluno || ''
+      });
+    } else {
+      setFormData({
+        tipo: 'receita',
+        categoria: '',
+        subcategoria: '',
+        descricao: '',
+        valor: '',
+        data: new Date().toISOString().split('T')[0],
+        status: 'pago',
+        metodo: '',
+        observacoes: '',
+        aluno: ''
+      });
+    }
+    setErrors({});
+  }, [transacao, isOpen]);
+
+  const categoriasDisponiveis = formData.tipo === 'receita' ? categorias.receitas : categorias.despesas;
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.descricao.trim()) {
+      newErrors.descricao = 'Descrição é obrigatória';
+    }
+    
+    if (!formData.valor || parseFloat(formData.valor) <= 0) {
+      newErrors.valor = 'Valor deve ser maior que zero';
+    }
+    
+    if (!formData.categoria) {
+      newErrors.categoria = 'Categoria é obrigatória';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSave({
+        ...formData,
+        valor: parseFloat(formData.valor)
+      });
+    }
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${transacao ? 'Editar' : 'Nova'} Transação`}
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Tipo
+            </label>
+            <select
+              value={formData.tipo}
+              onChange={(e) => setFormData(prev => ({ ...prev, tipo: e.target.value, categoria: '' }))}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+            >
+              <option value="receita">💰 Receita</option>
+              <option value="despesa">📉 Despesa</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Categoria
+            </label>
+            <select
+              value={formData.categoria}
+              onChange={(e) => setFormData(prev => ({ ...prev, categoria: e.target.value }))}
+              className={`w-full p-3 border rounded-lg ${
+                errors.categoria ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700`}
+            >
+              <option value="">Selecione uma categoria</option>
+              {categoriasDisponiveis.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.icon} {cat.nome}
+                </option>
+              ))}
+            </select>
+            {errors.categoria && (
+              <p className="text-sm text-red-600 mt-1">{errors.categoria}</p>
+            )}
+          </div>
+        </div>
+
+        <Input
+          label="Subcategoria (Opcional)"
+          value={formData.subcategoria}
+          onChange={(e) => setFormData(prev => ({ ...prev, subcategoria: e.target.value }))}
+          placeholder="Ex: Quadra 1, Professor João, etc."
+        />
+
+        <Input
+          label="Descrição"
+          required
+          value={formData.descricao}
+          onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+          error={errors.descricao}
+          placeholder="Descreva a transação"
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Valor (R$)"
+            type="number"
+            step="0.01"
+            min="0"
+            required
+            value={formData.valor}
+            onChange={(e) => setFormData(prev => ({ ...prev, valor: e.target.value }))}
+            error={errors.valor}
+          />
+          
+          <Input
+            label="Data"
+            type="date"
+            required
+            value={formData.data}
+            onChange={(e) => setFormData(prev => ({ ...prev, data: e.target.value }))}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+            >
+              <option value="pago">✅ Pago</option>
+              <option value="pendente">⏳ Pendente</option>
+            </select>
+          </div>
+          
+          <Input
+            label="Método de Pagamento"
+            value={formData.metodo}
+            onChange={(e) => setFormData(prev => ({ ...prev, metodo: e.target.value }))}
+            placeholder="PIX, Cartão, Dinheiro..."
+          />
+        </div>
+
+        {formData.tipo === 'receita' && (
+          <Input
+            label="Cliente/Aluno (Opcional)"
+            value={formData.aluno}
+            onChange={(e) => setFormData(prev => ({ ...prev, aluno: e.target.value }))}
+            placeholder="Nome do aluno ou cliente"
+          />
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+            Observações (Opcional)
+          </label>
+          <textarea
+            value={formData.observacoes}
+            onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+            placeholder="Informações adicionais..."
+            rows={3}
+            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 resize-none"
+          />
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            leftIcon={<Save size={16} />}
+          >
+            {transacao ? 'Atualizar' : 'Salvar'} Transação
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 });
 
