@@ -791,6 +791,95 @@ const AppStateProvider = ({ children }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [cart, setCart] = useState([]);
 
+  // 🆕 Hook para verificar alertas e notificações automáticas
+  useEffect(() => {
+    // Só executa para admins
+    if (tipoUsuario !== 'admin') return;
+
+    const verificarAlertas = () => {
+      const hoje = new Date();
+      
+      // Verificar vencimentos próximos
+      const alunosVencendo = alunos.filter(aluno => {
+        if (aluno.tipoPlano === 'plataforma') return false;
+        const vencimento = new Date(aluno.vencimento);
+        const diffDias = Math.ceil((vencimento - hoje) / (1000 * 60 * 60 * 24));
+        return diffDias <= 3 && diffDias >= 0;
+      });
+
+      // Verificar percentuais de sócios
+      const sociosAtivos = socios.filter(s => s.status === 'ativo');
+      const totalPercentual = sociosAtivos.reduce((acc, s) => acc + s.percentualParticipacao, 0);
+      const percentualInvalido = Math.abs(totalPercentual - 100) > 0.01;
+
+      // Verificar transações pendentes há mais de 7 dias
+      const transacoesPendentesAntigas = financeiro.filter(t => {
+        if (t.status !== 'pendente') return false;
+        const dataTransacao = new Date(t.data);
+        const diffDias = Math.ceil((hoje - dataTransacao) / (1000 * 60 * 60 * 24));
+        return diffDias > 7;
+      });
+
+      // Notificar apenas uma vez por sessão
+      const alertasJaExibidos = sessionStorage.getItem('alertas-exibidos') || '{}';
+      const alertasObj = JSON.parse(alertasJaExibidos);
+      const dataHoje = hoje.toDateString();
+
+      if (alertasObj.data !== dataHoje) {
+        // Resetar alertas para novo dia
+        alertasObj.data = dataHoje;
+        alertasObj.vencimentos = false;
+        alertasObj.percentuais = false;
+        alertasObj.pendentes = false;
+      }
+
+      // Alertas de vencimento
+      if (alunosVencendo.length > 0 && !alertasObj.vencimentos) {
+        setTimeout(() => {
+          addNotification({
+            type: 'warning',
+            title: '⚠️ Vencimentos Próximos',
+            message: `${alunosVencendo.length} aluno(s) com vencimento em até 3 dias`
+          });
+        }, 2000);
+        alertasObj.vencimentos = true;
+      }
+
+      // Alertas de percentuais inválidos
+      if (percentualInvalido && !alertasObj.percentuais) {
+        setTimeout(() => {
+          addNotification({
+            type: 'error',
+            title: '🤝 Sócios - Percentuais Inválidos',
+            message: `Percentuais não somam 100%. Atual: ${totalPercentual.toFixed(1)}%`
+          });
+        }, 3000);
+        alertasObj.percentuais = true;
+      }
+
+      // Alertas de transações pendentes antigas
+      if (transacoesPendentesAntigas.length > 0 && !alertasObj.pendentes) {
+        setTimeout(() => {
+          addNotification({
+            type: 'warning',
+            title: '💰 Transações Pendentes',
+            message: `${transacoesPendentesAntigas.length} transação(ões) pendente(s) há mais de 7 dias`
+          });
+        }, 4000);
+        alertasObj.pendentes = true;
+      }
+
+      sessionStorage.setItem('alertas-exibidos', JSON.stringify(alertasObj));
+    };
+
+    // Executar verificação após 1 segundo (dar tempo para carregar)
+    const timer = setTimeout(verificarAlertas, 1000);
+    return () => clearTimeout(timer);
+  }, [tipoUsuario, alunos, socios, financeiro]); // Dependências para re-executar quando dados mudarem
+
+  // 🆕 Hook para notificações - precisa ser definido no contexto correto
+  const { addNotification } = useNotifications();
+
   const value = useMemo(() => ({
     alunos, setAlunos,
     professores, setProfessores,
@@ -1002,6 +1091,299 @@ const useDebouncedSearch = (searchTerm, delay = 300) => {
   }, [searchTerm, delay]);
 
   return debouncedTerm;
+};
+
+// 🆕 Hook customizado para gestão de sócios
+const useSocios = () => {
+  const { socios, setSocios } = useAppState();
+  const { addNotification } = useNotifications();
+
+  const validatePercentualDistribution = useCallback((novoPercentual, socioId = null) => {
+    const sociosAtivos = socios.filter(s => s.status === 'ativo' && s.id !== socioId);
+    const totalAtual = sociosAtivos.reduce((acc, s) => acc + s.percentualParticipacao, 0);
+    const novoTotal = totalAtual + novoPercentual;
+    
+    return {
+      isValid: Math.abs(novoTotal - 100) < 0.01,
+      totalAtual: totalAtual,
+      novoTotal: novoTotal,
+      disponivel: 100 - totalAtual
+    };
+  }, [socios]);
+
+  const calcularDistribuicaoLucros = useCallback((lucroTotal) => {
+    const sociosAtivos = socios.filter(s => s.status === 'ativo');
+    const validation = validatePercentualDistribution(0);
+    
+    if (!validation.isValid) {
+      return { error: 'Percentuais dos sócios não somam 100%', distribuicao: [] };
+    }
+
+    const distribuicao = sociosAtivos.map(socio => ({
+      ...socio,
+      valorDistribuicao: (lucroTotal * socio.percentualParticipacao) / 100
+    }));
+
+    return { error: null, distribuicao };
+  }, [socios, validatePercentualDistribution]);
+
+  return {
+    socios,
+    setSocios,
+    validatePercentualDistribution,
+    calcularDistribuicaoLucros,
+    // Estatísticas úteis
+    sociosAtivos: socios.filter(s => s.status === 'ativo'),
+    totalPercentualDistribuido: socios.filter(s => s.status === 'ativo').reduce((acc, s) => acc + s.percentualParticipacao, 0)
+  };
+};
+
+// 🆕 Hook customizado para operações financeiras
+const useFinanceiro = () => {
+  const { financeiro, setFinanceiro, categoriasFinanceiras } = useAppState();
+  const { addNotification } = useNotifications();
+
+  const adicionarTransacao = useCallback((transacaoData) => {
+    const novaTransacao = {
+      id: Date.now(),
+      ...transacaoData,
+      data: transacaoData.data || new Date().toISOString().split('T')[0]
+    };
+
+    setFinanceiro(prev => [...prev, novaTransacao]);
+    addNotification({
+      type: 'success',
+      title: `${transacaoData.tipo === 'receita' ? 'Receita' : 'Despesa'} adicionada`,
+      message: `${transacaoData.descricao} - R$ ${transacaoData.valor.toFixed(2)}`
+    });
+
+    return novaTransacao;
+  }, [setFinanceiro, addNotification]);
+
+  const atualizarTransacao = useCallback((transacaoId, dadosAtualizados) => {
+    setFinanceiro(prev => prev.map(t => 
+      t.id === transacaoId ? { ...t, ...dadosAtualizados } : t
+    ));
+    
+    addNotification({
+      type: 'success',
+      title: 'Transação atualizada',
+      message: 'Dados atualizados com sucesso'
+    });
+  }, [setFinanceiro, addNotification]);
+
+  const removerTransacao = useCallback((transacaoId) => {
+    const transacao = financeiro.find(t => t.id === transacaoId);
+    if (!transacao) return;
+
+    setFinanceiro(prev => prev.filter(t => t.id !== transacaoId));
+    addNotification({
+      type: 'success',
+      title: 'Transação removida',
+      message: `${transacao.descricao} foi removida`
+    });
+  }, [financeiro, setFinanceiro, addNotification]);
+
+  const calcularEstatisticas = useCallback((periodo = 'mes-atual') => {
+    const agora = new Date();
+    let transacoesFiltradas = financeiro;
+
+    // Filtrar por período
+    switch (periodo) {
+      case 'mes-atual':
+        transacoesFiltradas = financeiro.filter(t => {
+          const data = new Date(t.data);
+          return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
+        });
+        break;
+      case 'ano-atual':
+        transacoesFiltradas = financeiro.filter(t => {
+          const data = new Date(t.data);
+          return data.getFullYear() === agora.getFullYear();
+        });
+        break;
+    }
+
+    const receitas = transacoesFiltradas.filter(t => t.tipo === 'receita' && t.status === 'pago');
+    const despesas = transacoesFiltradas.filter(t => t.tipo === 'despesa' && t.status === 'pago');
+    const pendentes = transacoesFiltradas.filter(t => t.status === 'pendente');
+
+    const receitaTotal = receitas.reduce((acc, t) => acc + t.valor, 0);
+    const despesaTotal = despesas.reduce((acc, t) => acc + t.valor, 0);
+    const pendentesTotal = pendentes.reduce((acc, t) => acc + t.valor, 0);
+
+    return {
+      receitaTotal,
+      despesaTotal,
+      pendentesTotal,
+      lucroLiquido: receitaTotal - despesaTotal,
+      totalTransacoes: transacoesFiltradas.length,
+      receitasPorCategoria: calcularPorCategoria(receitas, 'receitas'),
+      despesasPorCategoria: calcularPorCategoria(despesas, 'despesas')
+    };
+  }, [financeiro]);
+
+  const calcularPorCategoria = useCallback((transacoes, tipo) => {
+    const categorias = categoriasFinanceiras[tipo] || [];
+    
+    return categorias.map(categoria => {
+      const transacoesCategoria = transacoes.filter(t => t.categoria === categoria.id);
+      const valor = transacoesCategoria.reduce((acc, t) => acc + t.valor, 0);
+      const total = transacoes.reduce((acc, t) => acc + t.valor, 0);
+      
+      return {
+        ...categoria,
+        valor,
+        quantidade: transacoesCategoria.length,
+        percentual: total > 0 ? (valor / total) * 100 : 0
+      };
+    }).filter(c => c.valor > 0).sort((a, b) => b.valor - a.valor);
+  }, [categoriasFinanceiras]);
+
+  return {
+    financeiro,
+    setFinanceiro,
+    adicionarTransacao,
+    atualizarTransacao,
+    removerTransacao,
+    calcularEstatisticas,
+    categoriasFinanceiras
+  };
+};
+
+// 🆕 Hook para relatórios e exportação
+const useRelatorios = () => {
+  const { socios, financeiro } = useAppState();
+  const { addNotification } = useNotifications();
+
+  const gerarRelatorioSocios = useCallback(() => {
+    const dados = socios.map(socio => ({
+      Nome: socio.nome,
+      CPF: socio.cpf,
+      Email: socio.email,
+      Telefone: socio.telefone,
+      'Data Entrada': new Date(socio.dataEntrada).toLocaleDateString('pt-BR'),
+      'Participação (%)': socio.percentualParticipacao,
+      Status: socio.status.charAt(0).toUpperCase() + socio.status.slice(1),
+      Observações: socio.observacoes || ''
+    }));
+
+    exportToCSV(dados, 'relatorio-socios');
+    addNotification({
+      type: 'success',
+      title: 'Relatório exportado',
+      message: 'Relatório de sócios baixado com sucesso'
+    });
+  }, [socios, addNotification]);
+
+  const gerarRelatorioFinanceiro = useCallback((periodo, tipo = 'completo') => {
+    let dados = [];
+    const agora = new Date();
+
+    // Filtrar transações por período
+    let transacoesFiltradas = financeiro.filter(t => {
+      const data = new Date(t.data);
+      switch (periodo) {
+        case 'mes-atual':
+          return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
+        case 'ano-atual':
+          return data.getFullYear() === agora.getFullYear();
+        default:
+          return true;
+      }
+    });
+
+    switch (tipo) {
+      case 'receitas':
+        dados = transacoesFiltradas
+          .filter(t => t.tipo === 'receita')
+          .map(t => ({
+            Data: new Date(t.data).toLocaleDateString('pt-BR'),
+            Categoria: t.categoria,
+            Subcategoria: t.subcategoria || '',
+            Descrição: t.descricao,
+            Valor: t.valor,
+            Status: t.status,
+            Cliente: t.aluno || ''
+          }));
+        break;
+      case 'despesas':
+        dados = transacoesFiltradas
+          .filter(t => t.tipo === 'despesa')
+          .map(t => ({
+            Data: new Date(t.data).toLocaleDateString('pt-BR'),
+            Categoria: t.categoria,
+            Subcategoria: t.subcategoria || '',
+            Descrição: t.descricao,
+            Valor: t.valor,
+            Status: t.status,
+            Método: t.metodo || ''
+          }));
+        break;
+      default: // completo
+        dados = transacoesFiltradas.map(t => ({
+          Data: new Date(t.data).toLocaleDateString('pt-BR'),
+          Tipo: t.tipo,
+          Categoria: t.categoria,
+          Subcategoria: t.subcategoria || '',
+          Descrição: t.descricao,
+          Valor: t.valor,
+          Status: t.status,
+          Método: t.metodo || '',
+          Observações: t.observacoes || ''
+        }));
+    }
+
+    if (dados.length > 0) {
+      exportToCSV(dados, `relatorio-${tipo}-${periodo}`);
+      addNotification({
+        type: 'success',
+        title: 'Relatório exportado',
+        message: `Relatório ${tipo} baixado com sucesso`
+      });
+    } else {
+      addNotification({
+        type: 'warning',
+        title: 'Sem dados',
+        message: 'Nenhuma transação encontrada para o período selecionado'
+      });
+    }
+  }, [financeiro, addNotification]);
+
+  const gerarRelatorioDistribuicao = useCallback((lucroTotal) => {
+    const sociosAtivos = socios.filter(s => s.status === 'ativo');
+    const totalPercentual = sociosAtivos.reduce((acc, s) => acc + s.percentualParticipacao, 0);
+
+    if (Math.abs(totalPercentual - 100) > 0.01) {
+      addNotification({
+        type: 'error',
+        title: 'Erro na distribuição',
+        message: 'Percentuais dos sócios não somam 100%'
+      });
+      return;
+    }
+
+    const dados = sociosAtivos.map(socio => ({
+      Sócio: socio.nome,
+      'CPF': socio.cpf,
+      'Participação (%)': socio.percentualParticipacao,
+      'Valor a Receber': ((lucroTotal * socio.percentualParticipacao) / 100).toFixed(2),
+      'Data Cálculo': new Date().toLocaleDateString('pt-BR')
+    }));
+
+    exportToCSV(dados, `distribuicao-lucros-${new Date().toISOString().split('T')[0]}`);
+    addNotification({
+      type: 'success',
+      title: 'Distribuição exportada',
+      message: 'Relatório de distribuição de lucros baixado'
+    });
+  }, [socios, addNotification]);
+
+  return {
+    gerarRelatorioSocios,
+    gerarRelatorioFinanceiro,
+    gerarRelatorioDistribuicao
+  };
 };
 
 // Hook para paginação
@@ -14390,5 +14772,8 @@ const App = () => {
     </ThemeProvider>
   );
 };
+
+// Tornar disponível globalmente para o HTML
+window.App = App;
 
 export default App;
