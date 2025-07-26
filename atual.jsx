@@ -239,6 +239,107 @@ const ThemeProvider = ({ children }) => {
 
 // Dados mockados expandidos
 const mockData = {
+ // 🆕 SÓCIOS - Gestão de sócios com percentuais
+ socios: [
+  {
+    id: 1,
+    nome: 'João da Silva Santos',
+    cpf: '123.456.789-00',
+    telefone: '(11) 99999-9999',
+    email: 'joao.santos@email.com',
+    dataEntrada: '2020-01-15',
+    percentualParticipacao: 40.0,
+    status: 'ativo', // ativo, inativo, suspenso
+    observacoes: 'Sócio fundador',
+    historicoAlteracoes: [
+      {
+        id: 1,
+        data: '2020-01-15',
+        tipo: 'entrada',
+        percentualAnterior: 0,
+        percentualNovo: 40.0,
+        motivo: 'Entrada como sócio fundador',
+        responsavel: 'Sistema'
+      }
+    ]
+  },
+  {
+    id: 2,
+    nome: 'Maria Oliveira Costa',
+    cpf: '987.654.321-00',
+    telefone: '(21) 88888-8888',
+    email: 'maria.costa@email.com',
+    dataEntrada: '2020-01-15',
+    percentualParticipacao: 35.0,
+    status: 'ativo',
+    observacoes: 'Sócia fundadora, responsável pela área técnica',
+    historicoAlteracoes: [
+      {
+        id: 1,
+        data: '2020-01-15',
+        tipo: 'entrada',
+        percentualAnterior: 0,
+        percentualNovo: 35.0,
+        motivo: 'Entrada como sócia fundadora',
+        responsavel: 'Sistema'
+      }
+    ]
+  },
+  {
+    id: 3,
+    nome: 'Carlos Roberto Lima',
+    cpf: '456.789.123-00',
+    telefone: '(11) 77777-7777',
+    email: 'carlos.lima@email.com',
+    dataEntrada: '2021-06-01',
+    percentualParticipacao: 25.0,
+    status: 'ativo',
+    observacoes: 'Investidor, entrada posterior',
+    historicoAlteracoes: [
+      {
+        id: 1,
+        data: '2021-06-01',
+        tipo: 'entrada',
+        percentualAnterior: 0,
+        percentualNovo: 30.0,
+        motivo: 'Entrada como novo sócio investidor',
+        responsavel: 'João da Silva Santos'
+      },
+      {
+        id: 2,
+        data: '2022-03-15',
+        tipo: 'alteracao',
+        percentualAnterior: 30.0,
+        percentualNovo: 25.0,
+        motivo: 'Reajuste de participação por acordo',
+        responsavel: 'Maria Oliveira Costa'
+      }
+    ]
+  }
+ ],
+ 
+ // 🆕 CATEGORIAS FINANCEIRAS - Para receitas e despesas detalhadas
+ categoriasFinanceiras: {
+   receitas: [
+     { id: 'aluguel-quadras', nome: 'Aluguel de Quadras', icon: '🏟️', cor: '#10b981' },
+     { id: 'mensalidades', nome: 'Mensalidades de Alunos', icon: '👥', cor: '#06b6d4' },
+     { id: 'eventos-torneios', nome: 'Eventos e Torneios', icon: '🏆', cor: '#f59e0b' },
+     { id: 'aulas-particulares', nome: 'Aulas Particulares', icon: '🎯', cor: '#8b5cf6' },
+     { id: 'produtos-loja', nome: 'Venda de Produtos', icon: '🛍️', cor: '#ec4899' },
+     { id: 'outras-receitas', nome: 'Outras Receitas', icon: '💰', cor: '#84cc16' }
+   ],
+   despesas: [
+     { id: 'manutencao-quadras', nome: 'Manutenção de Quadras', icon: '🔧', cor: '#ef4444' },
+     { id: 'funcionarios', nome: 'Salários e Encargos', icon: '👷', cor: '#f97316' },
+     { id: 'energia-eletrica', nome: 'Energia Elétrica', icon: '⚡', cor: '#eab308' },
+     { id: 'agua-saneamento', nome: 'Água e Saneamento', icon: '💧', cor: '#3b82f6' },
+     { id: 'material-esportivo', nome: 'Material Esportivo', icon: '🏐', cor: '#8b5cf6' },
+     { id: 'marketing-publicidade', nome: 'Marketing e Publicidade', icon: '📢', cor: '#06b6d4' },
+     { id: 'aluguel-imovel', nome: 'Aluguel do Imóvel', icon: '🏢', cor: '#64748b' },
+     { id: 'outras-despesas', nome: 'Outras Despesas', icon: '📋', cor: '#6b7280' }
+   ]
+ },
+
  planos: [
   // Unidade Centro
   { id: 1, nome: 'Plano Básico (2x/semana)', preco: 120.00, unidade: 'Centro' },
@@ -371,13 +472,199 @@ alunos: [
       ativo: true
     }
   ],
+  // 🆕 FINANCEIRO EXPANDIDO - Com categorização detalhada
   financeiro: [
-    { id: 1, alunoId: 1, aluno: 'João Silva', valor: 150, data: '2025-07-05', status: 'pago', tipo: 'receita', metodo: 'mensalidade', descricao: 'Mensalidade Julho' },
-    { id: 2, alunoId: 2, aluno: 'Maria Santos', valor: 120, data: '2025-07-03', status: 'pago', tipo: 'receita', metodo: 'mensalidade', descricao: 'Mensalidade Julho' },
-    { id: 3, alunoId: 3, aluno: 'Pedro Costa', valor: 180, data: '2025-07-01', status: 'pendente', tipo: 'receita', metodo: 'mensalidade', descricao: 'Mensalidade Julho' },
-    { id: 4, alunoId: 4, aluno: 'Ana Oliveira', valor: 50, data: '2025-07-06', status: 'pago', tipo: 'receita', metodo: 'diaria-dinheiro', descricao: 'Diária avulsa' },
-    { id: 5, valor: 500, data: '2025-07-01', status: 'pago', tipo: 'despesa', metodo: 'aluguel', descricao: 'Aluguel Quadra' },
-    { id: 6, valor: 45.50, data: '2025-07-02', status: 'pago', tipo: 'receita', metodo: 'diaria-plataforma', descricao: 'Wellhub (Gympass)' },
+    // RECEITAS - Categorizadas
+    { 
+      id: 1, 
+      alunoId: 1, 
+      aluno: 'João Silva', 
+      valor: 150, 
+      data: '2025-07-05', 
+      status: 'pago', 
+      tipo: 'receita', 
+      categoria: 'mensalidades',
+      subcategoria: 'Plano Intermediário',
+      metodo: 'pix', 
+      descricao: 'Mensalidade Julho - Plano Intermediário',
+      observacoes: '',
+      comprovante: ''
+    },
+    { 
+      id: 2, 
+      alunoId: 2, 
+      aluno: 'Maria Santos', 
+      valor: 120, 
+      data: '2025-07-03', 
+      status: 'pago', 
+      tipo: 'receita', 
+      categoria: 'mensalidades',
+      subcategoria: 'Plano Básico',
+      metodo: 'cartao', 
+      descricao: 'Mensalidade Julho - Plano Básico',
+      observacoes: '',
+      comprovante: ''
+    },
+    { 
+      id: 3, 
+      alunoId: 3, 
+      aluno: 'Pedro Costa', 
+      valor: 180, 
+      data: '2025-07-01', 
+      status: 'pendente', 
+      tipo: 'receita', 
+      categoria: 'mensalidades',
+      subcategoria: 'Plano Avançado',
+      metodo: 'boleto', 
+      descricao: 'Mensalidade Julho - Plano Avançado',
+      observacoes: 'Aguardando pagamento',
+      comprovante: ''
+    },
+    { 
+      id: 4, 
+      valor: 200, 
+      data: '2025-07-06', 
+      status: 'pago', 
+      tipo: 'receita', 
+      categoria: 'aluguel-quadras',
+      subcategoria: 'Quadra 1',
+      metodo: 'dinheiro', 
+      descricao: 'Aluguel quadra - Empresa ABC (4h)',
+      observacoes: 'Evento corporativo',
+      comprovante: ''
+    },
+    { 
+      id: 5, 
+      valor: 45.50, 
+      data: '2025-07-02', 
+      status: 'pago', 
+      tipo: 'receita', 
+      categoria: 'mensalidades',
+      subcategoria: 'Plataforma Wellhub',
+      metodo: 'plataforma', 
+      descricao: 'Wellhub (Gympass) - Aula avulsa',
+      observacoes: '',
+      comprovante: ''
+    },
+    { 
+      id: 6, 
+      valor: 1500, 
+      data: '2025-07-10', 
+      status: 'pago', 
+      tipo: 'receita', 
+      categoria: 'eventos-torneios',
+      subcategoria: 'Torneio Interno',
+      metodo: 'transferencia', 
+      descricao: 'Inscrições Torneio de Julho',
+      observacoes: '30 participantes',
+      comprovante: ''
+    },
+    { 
+      id: 7, 
+      valor: 280, 
+      data: '2025-07-08', 
+      status: 'pago', 
+      tipo: 'receita', 
+      categoria: 'produtos-loja',
+      subcategoria: 'Equipamentos',
+      metodo: 'cartao', 
+      descricao: 'Venda de camisas e bonés',
+      observacoes: '4 camisas + 2 bonés',
+      comprovante: ''
+    },
+
+    // DESPESAS - Categorizadas
+    { 
+      id: 8, 
+      valor: 800, 
+      data: '2025-07-01', 
+      status: 'pago', 
+      tipo: 'despesa', 
+      categoria: 'aluguel-imovel',
+      subcategoria: 'Aluguel Principal',
+      metodo: 'transferencia', 
+      descricao: 'Aluguel do imóvel - Julho',
+      observacoes: 'Quadras 1 e 2',
+      comprovante: 'comprovante_001.pdf'
+    },
+    { 
+      id: 9, 
+      valor: 450, 
+      data: '2025-07-03', 
+      status: 'pago', 
+      tipo: 'despesa', 
+      categoria: 'energia-eletrica',
+      subcategoria: 'Conta de Luz',
+      metodo: 'debito', 
+      descricao: 'Energia elétrica - Junho',
+      observacoes: '580 kWh consumidos',
+      comprovante: 'conta_luz_jun.pdf'
+    },
+    { 
+      id: 10, 
+      valor: 2800, 
+      data: '2025-07-05', 
+      status: 'pago', 
+      tipo: 'despesa', 
+      categoria: 'funcionarios',
+      subcategoria: 'Salário Professor',
+      metodo: 'transferencia', 
+      descricao: 'Salário Carlos Mendes - Julho',
+      observacoes: 'Professor principal',
+      comprovante: ''
+    },
+    { 
+      id: 11, 
+      valor: 320, 
+      data: '2025-07-07', 
+      status: 'pago', 
+      tipo: 'despesa', 
+      categoria: 'manutencao-quadras',
+      subcategoria: 'Areia e Rede',
+      metodo: 'dinheiro', 
+      descricao: 'Reposição areia quadra 2 + nova rede',
+      observacoes: '2m³ de areia + 1 rede oficial',
+      comprovante: ''
+    },
+    { 
+      id: 12, 
+      valor: 180, 
+      data: '2025-07-04', 
+      status: 'pago', 
+      tipo: 'despesa', 
+      categoria: 'agua-saneamento',
+      subcategoria: 'Conta de Água',
+      metodo: 'debito', 
+      descricao: 'Água e saneamento - Junho',
+      observacoes: '15m³ consumidos',
+      comprovante: 'conta_agua_jun.pdf'
+    },
+    { 
+      id: 13, 
+      valor: 600, 
+      data: '2025-07-12', 
+      status: 'pendente', 
+      tipo: 'despesa', 
+      categoria: 'marketing-publicidade',
+      subcategoria: 'Redes Sociais',
+      metodo: 'cartao', 
+      descricao: 'Impulsionamento Instagram + Facebook',
+      observacoes: 'Campanha de julho',
+      comprovante: ''
+    },
+    { 
+      id: 14, 
+      valor: 890, 
+      data: '2025-07-09', 
+      status: 'pago', 
+      tipo: 'despesa', 
+      categoria: 'material-esportivo',
+      subcategoria: 'Bolas e Equipamentos',
+      metodo: 'transferencia', 
+      descricao: 'Compra de 6 bolas Mikasa + cones',
+      observacoes: 'Reposição equipamentos',
+      comprovante: 'nf_mikasa_001.pdf'
+    }
   ],
   treinos: [
     { 
@@ -493,12 +780,105 @@ const AppStateProvider = ({ children }) => {
   const [plataformas, setPlataformas] = useLocalStorage('plataformas', mockData.plataformas);
   const [presencas, setPresencas] = useLocalStorage('presencas', mockData.presencas);
   const [horariosConfiguracao, setHorariosConfiguracao] = useLocalStorage('horariosConfiguracao', mockData.horariosConfiguracao);
+  
+  // 🆕 NOVOS ESTADOS - Sócios e categorias financeiras
+  const [socios, setSocios] = useLocalStorage('socios-ct', mockData.socios);
+  const [categoriasFinanceiras] = useLocalStorage('categorias-financeiras', mockData.categoriasFinanceiras);
 
   // Estados de sessão
   const [userLogado, setUserLogado] = useState(null);
   const [tipoUsuario, setTipoUsuario] = useState('admin');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [cart, setCart] = useState([]);
+
+  // 🆕 Hook para verificar alertas e notificações automáticas
+  useEffect(() => {
+    // Só executa para admins
+    if (tipoUsuario !== 'admin') return;
+
+    const verificarAlertas = () => {
+      const hoje = new Date();
+      
+      // Verificar vencimentos próximos
+      const alunosVencendo = alunos.filter(aluno => {
+        if (aluno.tipoPlano === 'plataforma') return false;
+        const vencimento = new Date(aluno.vencimento);
+        const diffDias = Math.ceil((vencimento - hoje) / (1000 * 60 * 60 * 24));
+        return diffDias <= 3 && diffDias >= 0;
+      });
+
+      // Verificar percentuais de sócios
+      const sociosAtivos = socios.filter(s => s.status === 'ativo');
+      const totalPercentual = sociosAtivos.reduce((acc, s) => acc + s.percentualParticipacao, 0);
+      const percentualInvalido = Math.abs(totalPercentual - 100) > 0.01;
+
+      // Verificar transações pendentes há mais de 7 dias
+      const transacoesPendentesAntigas = financeiro.filter(t => {
+        if (t.status !== 'pendente') return false;
+        const dataTransacao = new Date(t.data);
+        const diffDias = Math.ceil((hoje - dataTransacao) / (1000 * 60 * 60 * 24));
+        return diffDias > 7;
+      });
+
+      // Notificar apenas uma vez por sessão
+      const alertasJaExibidos = sessionStorage.getItem('alertas-exibidos') || '{}';
+      const alertasObj = JSON.parse(alertasJaExibidos);
+      const dataHoje = hoje.toDateString();
+
+      if (alertasObj.data !== dataHoje) {
+        // Resetar alertas para novo dia
+        alertasObj.data = dataHoje;
+        alertasObj.vencimentos = false;
+        alertasObj.percentuais = false;
+        alertasObj.pendentes = false;
+      }
+
+      // Alertas de vencimento
+      if (alunosVencendo.length > 0 && !alertasObj.vencimentos) {
+        setTimeout(() => {
+          addNotification({
+            type: 'warning',
+            title: '⚠️ Vencimentos Próximos',
+            message: `${alunosVencendo.length} aluno(s) com vencimento em até 3 dias`
+          });
+        }, 2000);
+        alertasObj.vencimentos = true;
+      }
+
+      // Alertas de percentuais inválidos
+      if (percentualInvalido && !alertasObj.percentuais) {
+        setTimeout(() => {
+          addNotification({
+            type: 'error',
+            title: '🤝 Sócios - Percentuais Inválidos',
+            message: `Percentuais não somam 100%. Atual: ${totalPercentual.toFixed(1)}%`
+          });
+        }, 3000);
+        alertasObj.percentuais = true;
+      }
+
+      // Alertas de transações pendentes antigas
+      if (transacoesPendentesAntigas.length > 0 && !alertasObj.pendentes) {
+        setTimeout(() => {
+          addNotification({
+            type: 'warning',
+            title: '💰 Transações Pendentes',
+            message: `${transacoesPendentesAntigas.length} transação(ões) pendente(s) há mais de 7 dias`
+          });
+        }, 4000);
+        alertasObj.pendentes = true;
+      }
+
+      sessionStorage.setItem('alertas-exibidos', JSON.stringify(alertasObj));
+    };
+
+    // Executar verificação após 1 segundo (dar tempo para carregar)
+    const timer = setTimeout(verificarAlertas, 1000);
+    return () => clearTimeout(timer);
+  }, [tipoUsuario, alunos, socios, financeiro]); // Dependências para re-executar quando dados mudarem
+
+  // 🆕 Hook para notificações - precisa ser definido no contexto correto
+  const { addNotification } = useNotifications();
 
   const value = useMemo(() => ({
     alunos, setAlunos,
@@ -515,7 +895,10 @@ const AppStateProvider = ({ children }) => {
     tipoUsuario, setTipoUsuario,
     activeTab, setActiveTab,
     alugueis, setAlugueis, 
-    cart, setCart
+    cart, setCart,
+    // 🆕 NOVOS VALORES NO CONTEXTO
+    socios, setSocios,
+    categoriasFinanceiras
   }), [
     alunos, setAlunos,
     professores, setProfessores,
@@ -531,7 +914,10 @@ const AppStateProvider = ({ children }) => {
     tipoUsuario, setTipoUsuario,
     activeTab, setActiveTab,
     alugueis, setAlugueis, 
-    cart, setCart
+    cart, setCart,
+    // 🆕 DEPENDÊNCIAS DOS NOVOS ESTADOS
+    socios, setSocios,
+    categoriasFinanceiras
   ]);
 
   return (
@@ -705,6 +1091,299 @@ const useDebouncedSearch = (searchTerm, delay = 300) => {
   }, [searchTerm, delay]);
 
   return debouncedTerm;
+};
+
+// 🆕 Hook customizado para gestão de sócios
+const useSocios = () => {
+  const { socios, setSocios } = useAppState();
+  const { addNotification } = useNotifications();
+
+  const validatePercentualDistribution = useCallback((novoPercentual, socioId = null) => {
+    const sociosAtivos = socios.filter(s => s.status === 'ativo' && s.id !== socioId);
+    const totalAtual = sociosAtivos.reduce((acc, s) => acc + s.percentualParticipacao, 0);
+    const novoTotal = totalAtual + novoPercentual;
+    
+    return {
+      isValid: Math.abs(novoTotal - 100) < 0.01,
+      totalAtual: totalAtual,
+      novoTotal: novoTotal,
+      disponivel: 100 - totalAtual
+    };
+  }, [socios]);
+
+  const calcularDistribuicaoLucros = useCallback((lucroTotal) => {
+    const sociosAtivos = socios.filter(s => s.status === 'ativo');
+    const validation = validatePercentualDistribution(0);
+    
+    if (!validation.isValid) {
+      return { error: 'Percentuais dos sócios não somam 100%', distribuicao: [] };
+    }
+
+    const distribuicao = sociosAtivos.map(socio => ({
+      ...socio,
+      valorDistribuicao: (lucroTotal * socio.percentualParticipacao) / 100
+    }));
+
+    return { error: null, distribuicao };
+  }, [socios, validatePercentualDistribution]);
+
+  return {
+    socios,
+    setSocios,
+    validatePercentualDistribution,
+    calcularDistribuicaoLucros,
+    // Estatísticas úteis
+    sociosAtivos: socios.filter(s => s.status === 'ativo'),
+    totalPercentualDistribuido: socios.filter(s => s.status === 'ativo').reduce((acc, s) => acc + s.percentualParticipacao, 0)
+  };
+};
+
+// 🆕 Hook customizado para operações financeiras
+const useFinanceiro = () => {
+  const { financeiro, setFinanceiro, categoriasFinanceiras } = useAppState();
+  const { addNotification } = useNotifications();
+
+  const adicionarTransacao = useCallback((transacaoData) => {
+    const novaTransacao = {
+      id: Date.now(),
+      ...transacaoData,
+      data: transacaoData.data || new Date().toISOString().split('T')[0]
+    };
+
+    setFinanceiro(prev => [...prev, novaTransacao]);
+    addNotification({
+      type: 'success',
+      title: `${transacaoData.tipo === 'receita' ? 'Receita' : 'Despesa'} adicionada`,
+      message: `${transacaoData.descricao} - R$ ${transacaoData.valor.toFixed(2)}`
+    });
+
+    return novaTransacao;
+  }, [setFinanceiro, addNotification]);
+
+  const atualizarTransacao = useCallback((transacaoId, dadosAtualizados) => {
+    setFinanceiro(prev => prev.map(t => 
+      t.id === transacaoId ? { ...t, ...dadosAtualizados } : t
+    ));
+    
+    addNotification({
+      type: 'success',
+      title: 'Transação atualizada',
+      message: 'Dados atualizados com sucesso'
+    });
+  }, [setFinanceiro, addNotification]);
+
+  const removerTransacao = useCallback((transacaoId) => {
+    const transacao = financeiro.find(t => t.id === transacaoId);
+    if (!transacao) return;
+
+    setFinanceiro(prev => prev.filter(t => t.id !== transacaoId));
+    addNotification({
+      type: 'success',
+      title: 'Transação removida',
+      message: `${transacao.descricao} foi removida`
+    });
+  }, [financeiro, setFinanceiro, addNotification]);
+
+  const calcularEstatisticas = useCallback((periodo = 'mes-atual') => {
+    const agora = new Date();
+    let transacoesFiltradas = financeiro;
+
+    // Filtrar por período
+    switch (periodo) {
+      case 'mes-atual':
+        transacoesFiltradas = financeiro.filter(t => {
+          const data = new Date(t.data);
+          return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
+        });
+        break;
+      case 'ano-atual':
+        transacoesFiltradas = financeiro.filter(t => {
+          const data = new Date(t.data);
+          return data.getFullYear() === agora.getFullYear();
+        });
+        break;
+    }
+
+    const receitas = transacoesFiltradas.filter(t => t.tipo === 'receita' && t.status === 'pago');
+    const despesas = transacoesFiltradas.filter(t => t.tipo === 'despesa' && t.status === 'pago');
+    const pendentes = transacoesFiltradas.filter(t => t.status === 'pendente');
+
+    const receitaTotal = receitas.reduce((acc, t) => acc + t.valor, 0);
+    const despesaTotal = despesas.reduce((acc, t) => acc + t.valor, 0);
+    const pendentesTotal = pendentes.reduce((acc, t) => acc + t.valor, 0);
+
+    return {
+      receitaTotal,
+      despesaTotal,
+      pendentesTotal,
+      lucroLiquido: receitaTotal - despesaTotal,
+      totalTransacoes: transacoesFiltradas.length,
+      receitasPorCategoria: calcularPorCategoria(receitas, 'receitas'),
+      despesasPorCategoria: calcularPorCategoria(despesas, 'despesas')
+    };
+  }, [financeiro]);
+
+  const calcularPorCategoria = useCallback((transacoes, tipo) => {
+    const categorias = categoriasFinanceiras[tipo] || [];
+    
+    return categorias.map(categoria => {
+      const transacoesCategoria = transacoes.filter(t => t.categoria === categoria.id);
+      const valor = transacoesCategoria.reduce((acc, t) => acc + t.valor, 0);
+      const total = transacoes.reduce((acc, t) => acc + t.valor, 0);
+      
+      return {
+        ...categoria,
+        valor,
+        quantidade: transacoesCategoria.length,
+        percentual: total > 0 ? (valor / total) * 100 : 0
+      };
+    }).filter(c => c.valor > 0).sort((a, b) => b.valor - a.valor);
+  }, [categoriasFinanceiras]);
+
+  return {
+    financeiro,
+    setFinanceiro,
+    adicionarTransacao,
+    atualizarTransacao,
+    removerTransacao,
+    calcularEstatisticas,
+    categoriasFinanceiras
+  };
+};
+
+// 🆕 Hook para relatórios e exportação
+const useRelatorios = () => {
+  const { socios, financeiro } = useAppState();
+  const { addNotification } = useNotifications();
+
+  const gerarRelatorioSocios = useCallback(() => {
+    const dados = socios.map(socio => ({
+      Nome: socio.nome,
+      CPF: socio.cpf,
+      Email: socio.email,
+      Telefone: socio.telefone,
+      'Data Entrada': new Date(socio.dataEntrada).toLocaleDateString('pt-BR'),
+      'Participação (%)': socio.percentualParticipacao,
+      Status: socio.status.charAt(0).toUpperCase() + socio.status.slice(1),
+      Observações: socio.observacoes || ''
+    }));
+
+    exportToCSV(dados, 'relatorio-socios');
+    addNotification({
+      type: 'success',
+      title: 'Relatório exportado',
+      message: 'Relatório de sócios baixado com sucesso'
+    });
+  }, [socios, addNotification]);
+
+  const gerarRelatorioFinanceiro = useCallback((periodo, tipo = 'completo') => {
+    let dados = [];
+    const agora = new Date();
+
+    // Filtrar transações por período
+    let transacoesFiltradas = financeiro.filter(t => {
+      const data = new Date(t.data);
+      switch (periodo) {
+        case 'mes-atual':
+          return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
+        case 'ano-atual':
+          return data.getFullYear() === agora.getFullYear();
+        default:
+          return true;
+      }
+    });
+
+    switch (tipo) {
+      case 'receitas':
+        dados = transacoesFiltradas
+          .filter(t => t.tipo === 'receita')
+          .map(t => ({
+            Data: new Date(t.data).toLocaleDateString('pt-BR'),
+            Categoria: t.categoria,
+            Subcategoria: t.subcategoria || '',
+            Descrição: t.descricao,
+            Valor: t.valor,
+            Status: t.status,
+            Cliente: t.aluno || ''
+          }));
+        break;
+      case 'despesas':
+        dados = transacoesFiltradas
+          .filter(t => t.tipo === 'despesa')
+          .map(t => ({
+            Data: new Date(t.data).toLocaleDateString('pt-BR'),
+            Categoria: t.categoria,
+            Subcategoria: t.subcategoria || '',
+            Descrição: t.descricao,
+            Valor: t.valor,
+            Status: t.status,
+            Método: t.metodo || ''
+          }));
+        break;
+      default: // completo
+        dados = transacoesFiltradas.map(t => ({
+          Data: new Date(t.data).toLocaleDateString('pt-BR'),
+          Tipo: t.tipo,
+          Categoria: t.categoria,
+          Subcategoria: t.subcategoria || '',
+          Descrição: t.descricao,
+          Valor: t.valor,
+          Status: t.status,
+          Método: t.metodo || '',
+          Observações: t.observacoes || ''
+        }));
+    }
+
+    if (dados.length > 0) {
+      exportToCSV(dados, `relatorio-${tipo}-${periodo}`);
+      addNotification({
+        type: 'success',
+        title: 'Relatório exportado',
+        message: `Relatório ${tipo} baixado com sucesso`
+      });
+    } else {
+      addNotification({
+        type: 'warning',
+        title: 'Sem dados',
+        message: 'Nenhuma transação encontrada para o período selecionado'
+      });
+    }
+  }, [financeiro, addNotification]);
+
+  const gerarRelatorioDistribuicao = useCallback((lucroTotal) => {
+    const sociosAtivos = socios.filter(s => s.status === 'ativo');
+    const totalPercentual = sociosAtivos.reduce((acc, s) => acc + s.percentualParticipacao, 0);
+
+    if (Math.abs(totalPercentual - 100) > 0.01) {
+      addNotification({
+        type: 'error',
+        title: 'Erro na distribuição',
+        message: 'Percentuais dos sócios não somam 100%'
+      });
+      return;
+    }
+
+    const dados = sociosAtivos.map(socio => ({
+      Sócio: socio.nome,
+      'CPF': socio.cpf,
+      'Participação (%)': socio.percentualParticipacao,
+      'Valor a Receber': ((lucroTotal * socio.percentualParticipacao) / 100).toFixed(2),
+      'Data Cálculo': new Date().toLocaleDateString('pt-BR')
+    }));
+
+    exportToCSV(dados, `distribuicao-lucros-${new Date().toISOString().split('T')[0]}`);
+    addNotification({
+      type: 'success',
+      title: 'Distribuição exportada',
+      message: 'Relatório de distribuição de lucros baixado'
+    });
+  }, [socios, addNotification]);
+
+  return {
+    gerarRelatorioSocios,
+    gerarRelatorioFinanceiro,
+    gerarRelatorioDistribuicao
+  };
 };
 
 // Hook para paginação
@@ -1688,7 +2367,7 @@ const MenuSidebar = memo(({ isMobileOpen, setMobileOpen, isCollapsed }) => {
  
   
   const { isDarkMode } = useTheme();
-  const { activeTab, setActiveTab, tipoUsuario, userLogado, setUserLogado, setTipoUsuario } = useAppState();
+  const { activeTab, setActiveTab, tipoUsuario, userLogado, setUserLogado, setTipoUsuario, socios } = useAppState();
   const { addNotification } = useNotifications();
   // 🆕 ADICIONAR: Hook para acessar as metas
   const [configs] = useLocalStorage('configuracoes-ct-usuario', {
@@ -1864,8 +2543,13 @@ if (tipoUsuario === 'admin' || tipoUsuario === 'professor') {
 
     if (tipoUsuario === 'admin') {
       financeiroItems.push(
-        
-        
+        { 
+          id: 'socios', 
+          label: '🤝 Gestão de Sócios', 
+          icon: Users,
+          roles: ['admin'],
+          badge: { count: socios.filter(s => s.status === 'ativo').length, color: 'green' }
+        }
       );
     }
 
@@ -5943,15 +6627,886 @@ const vagas = isSemLimite ? Infinity : (horario.maxAlunos - agendamentos.length)
   );
 });
 // Página de Financeiro
-const FinanceiroPage = memo(() => {
-  const { financeiro, setFinanceiro, tipoUsuario, userLogado, planos } = useAppState();
+// 🆕 PÁGINA DE GESTÃO DE SÓCIOS
+const SociosPage = memo(() => {
+  const { socios, setSocios, categoriasFinanceiras } = useAppState();
   const { addNotification } = useNotifications();
   
+  const [showModal, setShowModal] = useState(false);
+  const [editingSocio, setEditingSocio] = useState(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedSocio, setSelectedSocio] = useState(null);
+  const [filters, setFilters] = useState({
+    nome: '',
+    status: ''
+  });
+
+  // Estatísticas dos sócios
+  const estatisticas = useMemo(() => {
+    const total = socios.length;
+    const ativos = socios.filter(s => s.status === 'ativo').length;
+    const inativos = socios.filter(s => s.status === 'inativo').length;
+    const suspensos = socios.filter(s => s.status === 'suspenso').length;
+    const totalPercentual = socios.filter(s => s.status === 'ativo').reduce((sum, s) => sum + s.percentualParticipacao, 0);
+    const percentualDisponivel = 100 - totalPercentual;
+
+    return {
+      total,
+      ativos,
+      inativos,
+      suspensos,
+      totalPercentual,
+      percentualDisponivel,
+      percentualValido: Math.abs(totalPercentual - 100) < 0.01 // Considera válido se a diferença for menor que 0.01
+    };
+  }, [socios]);
+
+  // Filtrar sócios
+  const sociosFiltrados = useDebouncedSearch(filters.nome, 300);
+  const sociosExibidos = useMemo(() => {
+    return socios.filter(socio => {
+      const matchNome = !sociosFiltrados || 
+        socio.nome.toLowerCase().includes(sociosFiltrados.toLowerCase()) ||
+        socio.email.toLowerCase().includes(sociosFiltrados.toLowerCase()) ||
+        socio.cpf.includes(sociosFiltrados);
+      
+      const matchStatus = !filters.status || socio.status === filters.status;
+      
+      return matchNome && matchStatus;
+    });
+  }, [socios, sociosFiltrados, filters.status]);
+
+  // Handlers
+  const handleSaveSocio = useCallback((socioData) => {
+    if (editingSocio) {
+      // Editando sócio existente
+      const socioAnterior = socios.find(s => s.id === editingSocio.id);
+      const novoHistorico = {
+        id: Date.now(),
+        data: new Date().toISOString().split('T')[0],
+        tipo: 'alteracao',
+        percentualAnterior: socioAnterior.percentualParticipacao,
+        percentualNovo: socioData.percentualParticipacao,
+        motivo: socioData.motivoAlteracao || 'Alteração de dados',
+        responsavel: 'Admin' // TODO: Pegar usuário logado
+      };
+
+      const socioAtualizado = {
+        ...socioAnterior,
+        ...socioData,
+        historicoAlteracoes: [...socioAnterior.historicoAlteracoes, novoHistorico]
+      };
+
+      setSocios(prev => prev.map(s => s.id === editingSocio.id ? socioAtualizado : s));
+      addNotification({
+        type: 'success',
+        title: 'Sócio atualizado',
+        message: `Dados de ${socioData.nome} foram atualizados com sucesso`
+      });
+    } else {
+      // Novo sócio
+      const novoSocio = {
+        id: Date.now(),
+        ...socioData,
+        dataEntrada: socioData.dataEntrada || new Date().toISOString().split('T')[0],
+        historicoAlteracoes: [{
+          id: 1,
+          data: socioData.dataEntrada || new Date().toISOString().split('T')[0],
+          tipo: 'entrada',
+          percentualAnterior: 0,
+          percentualNovo: socioData.percentualParticipacao,
+          motivo: 'Entrada como novo sócio',
+          responsavel: 'Admin' // TODO: Pegar usuário logado
+        }]
+      };
+
+      setSocios(prev => [...prev, novoSocio]);
+      addNotification({
+        type: 'success',
+        title: 'Novo sócio cadastrado',
+        message: `${socioData.nome} foi adicionado como sócio`
+      });
+    }
+
+    setShowModal(false);
+    setEditingSocio(null);
+  }, [editingSocio, socios, setSocios, addNotification]);
+
+  const handleDeleteSocio = useCallback((socioId) => {
+    const socio = socios.find(s => s.id === socioId);
+    if (window.confirm(`Tem certeza que deseja remover ${socio.nome} como sócio?`)) {
+      setSocios(prev => prev.filter(s => s.id !== socioId));
+      addNotification({
+        type: 'success',
+        title: 'Sócio removido',
+        message: `${socio.nome} foi removido da sociedade`
+      });
+    }
+  }, [socios, setSocios, addNotification]);
+
+  const handleToggleStatus = useCallback((socioId, novoStatus) => {
+    const socio = socios.find(s => s.id === socioId);
+    const socioAtualizado = { ...socio, status: novoStatus };
+    
+    setSocios(prev => prev.map(s => s.id === socioId ? socioAtualizado : s));
+    addNotification({
+      type: 'success',
+      title: 'Status alterado',
+      message: `Status de ${socio.nome} alterado para ${novoStatus}`
+    });
+  }, [socios, setSocios, addNotification]);
+
+  // Função para calcular distribuição de lucros
+  const calcularDistribuicaoLucros = useCallback((lucroTotal) => {
+    const sociosAtivos = socios.filter(s => s.status === 'ativo');
+    return sociosAtivos.map(socio => ({
+      ...socio,
+      valorDistribuicao: (lucroTotal * socio.percentualParticipacao) / 100
+    }));
+  }, [socios]);
+
+  const exportarDados = useCallback(() => {
+    const dadosExportacao = socios.map(socio => ({
+      Nome: socio.nome,
+      CPF: socio.cpf,
+      Email: socio.email,
+      Telefone: socio.telefone,
+      'Data Entrada': new Date(socio.dataEntrada).toLocaleDateString('pt-BR'),
+      'Participação (%)': socio.percentualParticipacao,
+      Status: socio.status.charAt(0).toUpperCase() + socio.status.slice(1),
+      Observações: socio.observacoes || ''
+    }));
+
+    exportToCSV(dadosExportacao, 'socios-ct');
+  }, [socios]);
+
+  return (
+    <div className="p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+                🤝 Gestão de Sócios
+                <span className="text-lg bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full">
+                  {estatisticas.ativos} ativos
+                </span>
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Gerencie os sócios e sua participação nos lucros do CT
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={exportarDados}
+                variant="secondary"
+                leftIcon={<Download size={16} />}
+              >
+                Exportar
+              </Button>
+              
+              <Button
+                onClick={() => {
+                  setEditingSocio(null);
+                  setShowModal(true);
+                }}
+                leftIcon={<Plus size={16} />}
+              >
+                Novo Sócio
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="text-2xl font-bold text-blue-600">{estatisticas.total}</div>
+            <div className="text-sm text-blue-800 dark:text-blue-300">Total de Sócios</div>
+          </div>
+          
+          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="text-2xl font-bold text-green-600">{estatisticas.ativos}</div>
+            <div className="text-sm text-green-800 dark:text-green-300">Ativos</div>
+          </div>
+          
+          <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+            <div className="text-2xl font-bold text-gray-600">{estatisticas.inativos}</div>
+            <div className="text-sm text-gray-800 dark:text-gray-300">Inativos</div>
+          </div>
+          
+          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+            <div className="text-2xl font-bold text-red-600">{estatisticas.suspensos}</div>
+            <div className="text-sm text-red-800 dark:text-red-300">Suspensos</div>
+          </div>
+          
+          <div className={`p-4 rounded-lg border ${
+            estatisticas.percentualValido 
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+          }`}>
+            <div className={`text-2xl font-bold ${
+              estatisticas.percentualValido ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {estatisticas.totalPercentual.toFixed(1)}%
+            </div>
+            <div className={`text-sm ${
+              estatisticas.percentualValido 
+                ? 'text-green-800 dark:text-green-300' 
+                : 'text-red-800 dark:text-red-300'
+            }`}>
+              Total Distribuído
+            </div>
+          </div>
+          
+          <div className={`p-4 rounded-lg border ${
+            estatisticas.percentualDisponivel >= 0 
+              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+          }`}>
+            <div className={`text-2xl font-bold ${
+              estatisticas.percentualDisponivel >= 0 ? 'text-blue-600' : 'text-red-600'
+            }`}>
+              {estatisticas.percentualDisponivel.toFixed(1)}%
+            </div>
+            <div className={`text-sm ${
+              estatisticas.percentualDisponivel >= 0 
+                ? 'text-blue-800 dark:text-blue-300' 
+                : 'text-red-800 dark:text-red-300'
+            }`}>
+              Disponível
+            </div>
+          </div>
+        </div>
+
+        {/* Alerta de validação */}
+        {!estatisticas.percentualValido && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="text-red-600" size={24} />
+              <div>
+                <h4 className="text-red-800 dark:text-red-200 font-semibold">
+                  ⚠️ Participação Inválida
+                </h4>
+                <p className="text-red-700 dark:text-red-300 text-sm">
+                  A soma dos percentuais deve ser exatamente 100%. 
+                  Atualmente: {estatisticas.totalPercentual.toFixed(1)}%
+                  {estatisticas.percentualDisponivel !== 0 && (
+                    <span className="font-medium">
+                      {estatisticas.percentualDisponivel > 0 
+                        ? ` (Faltam ${estatisticas.percentualDisponivel.toFixed(1)}%)`
+                        : ` (Excesso de ${Math.abs(estatisticas.percentualDisponivel).toFixed(1)}%)`
+                      }
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Filtros */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Buscar por nome, email ou CPF..."
+                value={filters.nome}
+                onChange={(e) => setFilters(prev => ({ ...prev, nome: e.target.value }))}
+                leftIcon={<Search size={16} />}
+              />
+            </div>
+            
+            <div className="w-full md:w-48">
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Todos os status</option>
+                <option value="ativo">✅ Ativo</option>
+                <option value="inativo">❌ Inativo</option>
+                <option value="suspenso">⏸️ Suspenso</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Lista de Sócios */}
+        {sociosExibidos.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 dark:bg-gray-700/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
+            <Users className="mx-auto text-gray-400 mb-4" size={64} />
+            <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
+              Nenhum sócio encontrado
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              {filters.nome || filters.status 
+                ? 'Altere os filtros para ver outros sócios'
+                : 'Comece adicionando o primeiro sócio do CT'
+              }
+            </p>
+            {!filters.nome && !filters.status && (
+              <Button
+                onClick={() => {
+                  setEditingSocio(null);
+                  setShowModal(true);
+                }}
+                leftIcon={<Plus size={16} />}
+              >
+                Adicionar Primeiro Sócio
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {sociosExibidos.map(socio => (
+              <div 
+                key={socio.id} 
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+              >
+                {/* Header do Card */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white ${
+                      socio.status === 'ativo' ? 'bg-green-600' :
+                      socio.status === 'inativo' ? 'bg-gray-500' : 'bg-red-600'
+                    }`}>
+                      {socio.nome.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">
+                        {socio.nome}
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        {socio.email}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    socio.status === 'ativo' 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                      : socio.status === 'inativo'
+                        ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                  }`}>
+                    {socio.status === 'ativo' && '✅ Ativo'}
+                    {socio.status === 'inativo' && '❌ Inativo'}
+                    {socio.status === 'suspenso' && '⏸️ Suspenso'}
+                  </div>
+                </div>
+
+                {/* Informações principais */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User size={16} className="text-gray-400" />
+                    <span className="text-gray-600 dark:text-gray-400">CPF:</span>
+                    <span className="font-medium">{socio.cpf}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone size={16} className="text-gray-400" />
+                    <span className="text-gray-600 dark:text-gray-400">Telefone:</span>
+                    <span className="font-medium">{socio.telefone}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar size={16} className="text-gray-400" />
+                    <span className="text-gray-600 dark:text-gray-400">Entrada:</span>
+                    <span className="font-medium">
+                      {new Date(socio.dataEntrada).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Participação */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {socio.percentualParticipacao}%
+                    </div>
+                    <div className="text-sm text-blue-800 dark:text-blue-300">
+                      Participação nos Lucros
+                    </div>
+                  </div>
+                </div>
+
+                {/* Observações */}
+                {socio.observacoes && (
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                      "{socio.observacoes}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Ações */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedSocio(socio);
+                        setShowHistoryModal(true);
+                      }}
+                      className="p-2 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                      title="Ver histórico de alterações"
+                    >
+                      <Clock size={16} />
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setEditingSocio(socio);
+                        setShowModal(true);
+                      }}
+                      className="p-2 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                      title="Editar sócio"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    
+                    <button
+                      onClick={() => handleDeleteSocio(socio.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 rounded transition-colors"
+                      title="Remover sócio"
+                    >
+                      <Trash size={16} />
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <select
+                      value={socio.status}
+                      onChange={(e) => handleToggleStatus(socio.id, e.target.value)}
+                      className="text-xs p-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                    >
+                      <option value="ativo">Ativo</option>
+                      <option value="inativo">Inativo</option>
+                      <option value="suspenso">Suspenso</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Modais */}
+        <SocioModal
+          isOpen={showModal}
+          onClose={() => {
+            setShowModal(false);
+            setEditingSocio(null);
+          }}
+          onSave={handleSaveSocio}
+          socio={editingSocio}
+          percentualDisponivel={estatisticas.percentualDisponivel + (editingSocio?.percentualParticipacao || 0)}
+        />
+
+        <HistoricoAlteracoesSocioModal
+          isOpen={showHistoryModal}
+          onClose={() => {
+            setShowHistoryModal(false);
+            setSelectedSocio(null);
+          }}
+          socio={selectedSocio}
+        />
+      </div>
+    </div>
+  );
+});
+
+// Modal para adicionar/editar sócio
+const SocioModal = memo(({ isOpen, onClose, onSave, socio, percentualDisponivel }) => {
+  const [formData, setFormData] = useState({
+    nome: '',
+    cpf: '',
+    telefone: '',
+    email: '',
+    dataEntrada: new Date().toISOString().split('T')[0],
+    percentualParticipacao: 0,
+    status: 'ativo',
+    observacoes: '',
+    motivoAlteracao: ''
+  });
+  
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (socio) {
+      setFormData({
+        nome: socio.nome || '',
+        cpf: socio.cpf || '',
+        telefone: socio.telefone || '',
+        email: socio.email || '',
+        dataEntrada: socio.dataEntrada || new Date().toISOString().split('T')[0],
+        percentualParticipacao: socio.percentualParticipacao || 0,
+        status: socio.status || 'ativo',
+        observacoes: socio.observacoes || '',
+        motivoAlteracao: ''
+      });
+    } else {
+      setFormData({
+        nome: '',
+        cpf: '',
+        telefone: '',
+        email: '',
+        dataEntrada: new Date().toISOString().split('T')[0],
+        percentualParticipacao: Math.max(0, percentualDisponivel),
+        status: 'ativo',
+        observacoes: '',
+        motivoAlteracao: ''
+      });
+    }
+    setErrors({});
+  }, [socio, isOpen, percentualDisponivel]);
+
+  const validateForm = useCallback(() => {
+    const newErrors = {};
+    
+    if (!formData.nome.trim()) {
+      newErrors.nome = 'Nome é obrigatório';
+    }
+    
+    if (!formData.cpf.trim()) {
+      newErrors.cpf = 'CPF é obrigatório';
+    } else {
+      // Validação básica de CPF (apenas formato)
+      const cpfLimpo = formData.cpf.replace(/\D/g, '');
+      if (cpfLimpo.length !== 11) {
+        newErrors.cpf = 'CPF deve ter 11 dígitos';
+      }
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+    
+    if (!formData.telefone.trim()) {
+      newErrors.telefone = 'Telefone é obrigatório';
+    }
+    
+    if (!formData.dataEntrada) {
+      newErrors.dataEntrada = 'Data de entrada é obrigatória';
+    }
+    
+    if (formData.percentualParticipacao <= 0) {
+      newErrors.percentualParticipacao = 'Percentual deve ser maior que zero';
+    } else if (formData.percentualParticipacao > percentualDisponivel) {
+      newErrors.percentualParticipacao = `Percentual não pode exceder ${percentualDisponivel.toFixed(1)}%`;
+    }
+    
+    // Se estiver editando e mudou o percentual, exigir motivo
+    if (socio && socio.percentualParticipacao !== formData.percentualParticipacao && !formData.motivoAlteracao.trim()) {
+      newErrors.motivoAlteracao = 'Motivo da alteração é obrigatório';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData, percentualDisponivel, socio]);
+
+  const handleSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      setLoading(true);
+      try {
+        // Formatar CPF
+        const cpfFormatado = formData.cpf.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        // Formatar telefone
+        const telefoneFormatado = formData.telefone.replace(/\D/g, '').replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        
+        await onSave({
+          ...formData,
+          cpf: cpfFormatado,
+          telefone: telefoneFormatado,
+          percentualParticipacao: parseFloat(formData.percentualParticipacao)
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [formData, validateForm, onSave]);
+
+  const formatCPF = useCallback((value) => {
+    const cleaned = value.replace(/\D/g, '');
+    const formatted = cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    return formatted;
+  }, []);
+
+  const formatTelefone = useCallback((value) => {
+    const cleaned = value.replace(/\D/g, '');
+    const formatted = cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    return formatted;
+  }, []);
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${socio ? 'Editar' : 'Novo'} Sócio`}
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Informações básicas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <Input
+              label="Nome Completo"
+              required
+              value={formData.nome}
+              onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+              error={errors.nome}
+              placeholder="Ex: João da Silva Santos"
+            />
+          </div>
+
+          <Input
+            label="CPF"
+            required
+            value={formData.cpf}
+            onChange={(e) => setFormData(prev => ({ ...prev, cpf: formatCPF(e.target.value) }))}
+            error={errors.cpf}
+            placeholder="000.000.000-00"
+            maxLength={14}
+          />
+
+          <Input
+            label="Telefone"
+            required
+            value={formData.telefone}
+            onChange={(e) => setFormData(prev => ({ ...prev, telefone: formatTelefone(e.target.value) }))}
+            error={errors.telefone}
+            placeholder="(11) 99999-9999"
+            maxLength={15}
+          />
+        </div>
+
+        <Input
+          label="Email"
+          type="email"
+          required
+          value={formData.email}
+          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+          error={errors.email}
+          placeholder="email@exemplo.com"
+        />
+
+        {/* Data de entrada e participação */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Input
+            label="Data de Entrada"
+            type="date"
+            required
+            value={formData.dataEntrada}
+            onChange={(e) => setFormData(prev => ({ ...prev, dataEntrada: e.target.value }))}
+            error={errors.dataEntrada}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Participação nos Lucros (%)
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max={percentualDisponivel}
+                value={formData.percentualParticipacao}
+                onChange={(e) => setFormData(prev => ({ ...prev, percentualParticipacao: e.target.value }))}
+                className={`w-full px-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.percentualParticipacao ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                <span className="text-gray-500">%</span>
+              </div>
+            </div>
+            {errors.percentualParticipacao && (
+              <p className="text-sm text-red-600 mt-1">{errors.percentualParticipacao}</p>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              Disponível: {percentualDisponivel.toFixed(1)}%
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="ativo">✅ Ativo</option>
+              <option value="inativo">❌ Inativo</option>
+              <option value="suspenso">⏸️ Suspenso</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Motivo da alteração (só aparece se estiver editando e mudou o percentual) */}
+        {socio && socio.percentualParticipacao !== parseFloat(formData.percentualParticipacao) && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Motivo da Alteração de Percentual
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <textarea
+              value={formData.motivoAlteracao}
+              onChange={(e) => setFormData(prev => ({ ...prev, motivoAlteracao: e.target.value }))}
+              placeholder="Explique o motivo da alteração do percentual de participação..."
+              rows={3}
+              className={`w-full p-3 border rounded-lg resize-none ${
+                errors.motivoAlteracao ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+            />
+            {errors.motivoAlteracao && (
+              <p className="text-sm text-red-600 mt-1">{errors.motivoAlteracao}</p>
+            )}
+          </div>
+        )}
+
+        {/* Observações */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+            Observações (Opcional)
+          </label>
+          <textarea
+            value={formData.observacoes}
+            onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+            placeholder="Informações adicionais sobre o sócio..."
+            rows={3}
+            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+          />
+        </div>
+
+        {/* Botões */}
+        <div className="flex justify-end space-x-3 pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            loading={loading}
+            leftIcon={<Save size={16} />}
+          >
+            {socio ? 'Atualizar' : 'Cadastrar'} Sócio
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+});
+
+// Modal para visualizar histórico de alterações
+const HistoricoAlteracoesSocioModal = memo(({ isOpen, onClose, socio }) => {
+  if (!socio) return null;
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Histórico de Alterações - ${socio.nome}`}
+      size="lg"
+    >
+      <div className="space-y-4">
+        {socio.historicoAlteracoes && socio.historicoAlteracoes.length > 0 ? (
+          <div className="space-y-3">
+            {socio.historicoAlteracoes
+              .sort((a, b) => new Date(b.data) - new Date(a.data))
+              .map((alteracao) => (
+                <div 
+                  key={alteracao.id} 
+                  className="border border-gray-200 dark:border-gray-600 rounded-lg p-4"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      alteracao.tipo === 'entrada' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
+                    }`}>
+                      {alteracao.tipo === 'entrada' ? '🎉 Entrada' : '✏️ Alteração'}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {new Date(alteracao.data).toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Percentual Anterior:</span>
+                      <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                        {alteracao.percentualAnterior}%
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Percentual Novo:</span>
+                      <div className="text-lg font-semibold text-green-600">
+                        {alteracao.percentualNovo}%
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Motivo:</span>
+                    <p className="text-gray-800 dark:text-gray-100">{alteracao.motivo}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Responsável:</span>
+                    <span className="ml-2 font-medium">{alteracao.responsavel}</span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Clock className="mx-auto text-gray-400 mb-4" size={48} />
+            <p className="text-gray-500 dark:text-gray-400">
+              Nenhuma alteração registrada para este sócio.
+            </p>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+});
+
+const FinanceiroPage = memo(() => {
+  const { 
+    financeiro, setFinanceiro, 
+    socios, 
+    categoriasFinanceiras, 
+    tipoUsuario, userLogado, planos 
+  } = useAppState();
+  const { addNotification } = useNotifications();
+  
+  const [activeView, setActiveView] = useState('dashboard'); // dashboard, receitas, despesas, distribuicao
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState({
+    categoria: '',
+    periodo: 'mes-atual'
+  });
   const [showModal, setShowModal] = useState(false);
   const [editingTransacao, setEditingTransacao] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [showDistribuicaoModal, setShowDistribuicaoModal] = useState(false);
+  const [periodoRelatorio, setPeriodoRelatorio] = useState({
+    inicio: new Date().toISOString().split('T')[0].replace(/-\d{2}$/, '-01'),
+    fim: new Date().toISOString().split('T')[0]
+  });
 
   // Filtrar dados baseado no tipo de usuário
   const dadosFinanceiros = useMemo(() => {
@@ -6242,6 +7797,310 @@ const FinanceiroPage = memo(() => {
         />
       </div>
     </div>
+  );
+});
+
+// 🆕 Componente para mostrar distribuição de lucros
+const DistribuicaoLucrosContent = memo(({ lucro, socios }) => {
+  const sociosAtivos = socios.filter(s => s.status === 'ativo');
+  const totalPercentual = sociosAtivos.reduce((acc, s) => acc + s.percentualParticipacao, 0);
+  
+  const distribuicao = sociosAtivos.map(socio => ({
+    ...socio,
+    valorDistribuicao: (lucro * socio.percentualParticipacao) / 100
+  }));
+
+  const isValidDistribution = Math.abs(totalPercentual - 100) < 0.01;
+
+  if (!isValidDistribution) {
+    return (
+      <div className="text-center py-8">
+        <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
+        <h3 className="text-lg font-semibold text-red-600 mb-2">
+          Distribuição Inválida
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400">
+          A soma dos percentuais dos sócios deve ser exatamente 100%.
+          <br />
+          Atual: {totalPercentual.toFixed(1)}%
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+          Lucro a Distribuir
+        </h4>
+        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+          R$ {lucro.toFixed(2)}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {distribuicao.map(socio => (
+          <div key={socio.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
+                {socio.nome.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h5 className="font-semibold text-gray-800 dark:text-gray-100">
+                  {socio.nome}
+                </h5>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {socio.percentualParticipacao}% de participação
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-green-600">
+                R$ {socio.valorDistribuicao.toFixed(2)}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
+        <div className="flex justify-between items-center">
+          <span className="font-semibold text-gray-800 dark:text-gray-100">Total:</span>
+          <span className="text-xl font-bold text-blue-600">
+            R$ {distribuicao.reduce((acc, s) => acc + s.valorDistribuicao, 0).toFixed(2)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// 🆕 Modal para transações financeiras
+const TransacaoModal = memo(({ isOpen, onClose, onSave, transacao, categorias }) => {
+  const [formData, setFormData] = useState({
+    tipo: 'receita',
+    categoria: '',
+    subcategoria: '',
+    descricao: '',
+    valor: '',
+    data: new Date().toISOString().split('T')[0],
+    status: 'pago',
+    metodo: '',
+    observacoes: '',
+    aluno: ''
+  });
+  
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (transacao) {
+      setFormData({
+        tipo: transacao.tipo || 'receita',
+        categoria: transacao.categoria || '',
+        subcategoria: transacao.subcategoria || '',
+        descricao: transacao.descricao || '',
+        valor: transacao.valor || '',
+        data: transacao.data || new Date().toISOString().split('T')[0],
+        status: transacao.status || 'pago',
+        metodo: transacao.metodo || '',
+        observacoes: transacao.observacoes || '',
+        aluno: transacao.aluno || ''
+      });
+    } else {
+      setFormData({
+        tipo: 'receita',
+        categoria: '',
+        subcategoria: '',
+        descricao: '',
+        valor: '',
+        data: new Date().toISOString().split('T')[0],
+        status: 'pago',
+        metodo: '',
+        observacoes: '',
+        aluno: ''
+      });
+    }
+    setErrors({});
+  }, [transacao, isOpen]);
+
+  const categoriasDisponiveis = formData.tipo === 'receita' ? categorias.receitas : categorias.despesas;
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.descricao.trim()) {
+      newErrors.descricao = 'Descrição é obrigatória';
+    }
+    
+    if (!formData.valor || parseFloat(formData.valor) <= 0) {
+      newErrors.valor = 'Valor deve ser maior que zero';
+    }
+    
+    if (!formData.categoria) {
+      newErrors.categoria = 'Categoria é obrigatória';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSave({
+        ...formData,
+        valor: parseFloat(formData.valor)
+      });
+    }
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${transacao ? 'Editar' : 'Nova'} Transação`}
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Tipo
+            </label>
+            <select
+              value={formData.tipo}
+              onChange={(e) => setFormData(prev => ({ ...prev, tipo: e.target.value, categoria: '' }))}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+            >
+              <option value="receita">💰 Receita</option>
+              <option value="despesa">📉 Despesa</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Categoria
+            </label>
+            <select
+              value={formData.categoria}
+              onChange={(e) => setFormData(prev => ({ ...prev, categoria: e.target.value }))}
+              className={`w-full p-3 border rounded-lg ${
+                errors.categoria ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700`}
+            >
+              <option value="">Selecione uma categoria</option>
+              {categoriasDisponiveis.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.icon} {cat.nome}
+                </option>
+              ))}
+            </select>
+            {errors.categoria && (
+              <p className="text-sm text-red-600 mt-1">{errors.categoria}</p>
+            )}
+          </div>
+        </div>
+
+        <Input
+          label="Subcategoria (Opcional)"
+          value={formData.subcategoria}
+          onChange={(e) => setFormData(prev => ({ ...prev, subcategoria: e.target.value }))}
+          placeholder="Ex: Quadra 1, Professor João, etc."
+        />
+
+        <Input
+          label="Descrição"
+          required
+          value={formData.descricao}
+          onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+          error={errors.descricao}
+          placeholder="Descreva a transação"
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Valor (R$)"
+            type="number"
+            step="0.01"
+            min="0"
+            required
+            value={formData.valor}
+            onChange={(e) => setFormData(prev => ({ ...prev, valor: e.target.value }))}
+            error={errors.valor}
+          />
+          
+          <Input
+            label="Data"
+            type="date"
+            required
+            value={formData.data}
+            onChange={(e) => setFormData(prev => ({ ...prev, data: e.target.value }))}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+            >
+              <option value="pago">✅ Pago</option>
+              <option value="pendente">⏳ Pendente</option>
+            </select>
+          </div>
+          
+          <Input
+            label="Método de Pagamento"
+            value={formData.metodo}
+            onChange={(e) => setFormData(prev => ({ ...prev, metodo: e.target.value }))}
+            placeholder="PIX, Cartão, Dinheiro..."
+          />
+        </div>
+
+        {formData.tipo === 'receita' && (
+          <Input
+            label="Cliente/Aluno (Opcional)"
+            value={formData.aluno}
+            onChange={(e) => setFormData(prev => ({ ...prev, aluno: e.target.value }))}
+            placeholder="Nome do aluno ou cliente"
+          />
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+            Observações (Opcional)
+          </label>
+          <textarea
+            value={formData.observacoes}
+            onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+            placeholder="Informações adicionais..."
+            rows={3}
+            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 resize-none"
+          />
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            leftIcon={<Save size={16} />}
+          >
+            {transacao ? 'Atualizar' : 'Salvar'} Transação
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 });
 
@@ -12849,7 +14708,9 @@ const renderContent = useCallback(() => {
     case 'metas':
       return <MetasPage />;
     case 'financeiro':
-      return <FinanceiroPage />;       
+      return <FinanceiroPage />;
+    case 'socios':
+      return <SociosPage />;       
     case 'loja':
       return <LojaPage />;
     case 'evolucao':
@@ -12911,5 +14772,8 @@ const App = () => {
     </ThemeProvider>
   );
 };
+
+// Tornar disponível globalmente para o HTML
+window.App = App;
 
 export default App;
