@@ -12,6 +12,263 @@ const criarBarraRolagemBonita = () => {
     }
     
     const estilosCSS = `
+      /* ===============================
+         🎯 RESPONSIVE GRID SYSTEM
+         =============================== */
+      
+      /* Mobile-first breakpoints */
+      :root {
+        --breakpoint-xs: 320px;
+        --breakpoint-sm: 768px;
+        --breakpoint-md: 1024px;
+        --breakpoint-lg: 1200px;
+        
+        /* Responsive spacing */
+        --spacing-xs: clamp(0.25rem, 2vw, 0.5rem);
+        --spacing-sm: clamp(0.5rem, 3vw, 1rem);
+        --spacing-md: clamp(1rem, 4vw, 1.5rem);
+        --spacing-lg: clamp(1.5rem, 5vw, 2rem);
+        --spacing-xl: clamp(2rem, 6vw, 3rem);
+        
+        /* Fluid typography */
+        --font-size-xs: clamp(0.75rem, 2.5vw, 0.875rem);
+        --font-size-sm: clamp(0.875rem, 3vw, 1rem);
+        --font-size-base: clamp(1rem, 3.5vw, 1.125rem);
+        --font-size-lg: clamp(1.125rem, 4vw, 1.25rem);
+        --font-size-xl: clamp(1.25rem, 4.5vw, 1.5rem);
+        --font-size-2xl: clamp(1.5rem, 5vw, 2rem);
+        --font-size-3xl: clamp(2rem, 6vw, 2.5rem);
+        
+        /* Touch targets (minimum 44px) */
+        --touch-target-min: 44px;
+        
+        /* Container queries support */
+        --container-xs: 20rem;
+        --container-sm: 24rem;
+        --container-md: 28rem;
+        --container-lg: 32rem;
+        --container-xl: 36rem;
+      }
+      
+      /* Responsive grid system */
+      .responsive-grid {
+        display: grid;
+        gap: var(--spacing-md);
+        grid-template-columns: 1fr;
+      }
+      
+      @media (min-width: 768px) {
+        .responsive-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      
+      @media (min-width: 1024px) {
+        .responsive-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      
+      @media (min-width: 1200px) {
+        .responsive-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      
+      /* Container queries (progressive enhancement) */
+      @container (min-width: 320px) {
+        .container-responsive {
+          padding: var(--spacing-sm);
+        }
+      }
+      
+      @container (min-width: 768px) {
+        .container-responsive {
+          padding: var(--spacing-md);
+        }
+      }
+      
+      /* ===============================
+         📱 MOBILE-FIRST COMPONENTS
+         =============================== */
+      
+      /* Touch-friendly buttons */
+      .btn-touch {
+        min-height: var(--touch-target-min);
+        min-width: var(--touch-target-min);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: 0.5rem;
+        font-size: var(--font-size-base);
+        line-height: 1.5;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+      }
+      
+      /* Responsive cards */
+      .card-responsive {
+        padding: var(--spacing-md);
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        container-type: inline-size;
+      }
+      
+      @media (min-width: 768px) {
+        .card-responsive {
+          padding: var(--spacing-lg);
+        }
+      }
+      
+      /* ===============================
+         📝 FLUID TYPOGRAPHY
+         =============================== */
+      
+      /* Base typography improvements */
+      body {
+        font-size: var(--font-size-base);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      h1 { font-size: var(--font-size-3xl); line-height: 1.2; }
+      h2 { font-size: var(--font-size-2xl); line-height: 1.3; }
+      h3 { font-size: var(--font-size-xl); line-height: 1.4; }
+      h4 { font-size: var(--font-size-lg); line-height: 1.4; }
+      h5 { font-size: var(--font-size-base); line-height: 1.5; }
+      h6 { font-size: var(--font-size-sm); line-height: 1.5; }
+      
+      /* Mobile reading optimization */
+      @media (max-width: 767px) {
+        body {
+          line-height: 1.7; /* Better mobile reading */
+        }
+        
+        p, li {
+          line-height: 1.6;
+          margin-bottom: 1rem;
+        }
+      }
+      
+      /* ===============================
+         📱 MOBILE NAVIGATION
+         =============================== */
+      
+      /* Bottom navigation bar */
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        padding: 0.5rem;
+        z-index: 50;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+      }
+      
+      .bottom-nav.visible {
+        transform: translateY(0);
+      }
+      
+      .dark .bottom-nav {
+        background: #1f2937;
+        border-top-color: #374151;
+      }
+      
+      .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem;
+        min-height: var(--touch-target-min);
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: #6b7280;
+        font-size: var(--font-size-xs);
+      }
+      
+      .bottom-nav-item.active {
+        color: #3b82f6;
+        background: #eff6ff;
+      }
+      
+      .dark .bottom-nav-item.active {
+        color: #60a5fa;
+        background: #1e3a8a;
+      }
+      
+      /* Hide bottom nav on desktop */
+      @media (min-width: 1024px) {
+        .bottom-nav {
+          display: none;
+        }
+      }
+      
+      /* Improved hamburger menu */
+      .hamburger-menu {
+        position: relative;
+        width: var(--touch-target-min);
+        height: var(--touch-target-min);
+        border: none;
+        background: none;
+        cursor: pointer;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+      }
+      
+      .hamburger-menu:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+      
+      .dark .hamburger-menu:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      
+      /* Breadcrumbs - collapsible on mobile */
+      .breadcrumbs {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: var(--spacing-sm);
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      
+      .breadcrumbs::-webkit-scrollbar {
+        display: none;
+      }
+      
+      .breadcrumb-item {
+        white-space: nowrap;
+        font-size: var(--font-size-sm);
+        color: #6b7280;
+      }
+      
+      .breadcrumb-item.current {
+        color: #1f2937;
+        font-weight: 500;
+      }
+      
+      .dark .breadcrumb-item {
+        color: #9ca3af;
+      }
+      
+      .dark .breadcrumb-item.current {
+        color: #f9fafb;
+      }
+      
+      /* ===============================
+         🎨 SCROLLBAR STYLES (ENHANCED)
+         =============================== */
+      
       /* 🎯 BARRA DO MENU (mantém perfeita) */
       .menu-barra-bonita::-webkit-scrollbar {
         width: 6px;
@@ -85,6 +342,37 @@ const criarBarraRolagemBonita = () => {
       .menu-barra-bonita {
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.25) rgba(255, 255, 255, 0.08);
+      }
+      
+      /* ===============================
+         ⚡ PERFORMANCE OPTIMIZATIONS
+         =============================== */
+      
+      /* Lazy loading support */
+      img[loading="lazy"] {
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      
+      img[loading="lazy"].loaded {
+        opacity: 1;
+      }
+      
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Reduce motion for accessibility */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
       }
     `;
 
@@ -786,6 +1074,260 @@ class ErrorBoundary extends React.Component {
 }
 
 // ===============================
+// COMPONENTE DE NAVEGAÇÃO MÓVEL
+// ===============================
+
+// Bottom Navigation Bar para dispositivos móveis
+const BottomNavigation = memo(() => {
+  const { activeTab, setActiveTab, tipoUsuario } = useAppState();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Auto-hide bottom nav on scroll down, show on scroll up
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false); // Hide when scrolling down
+      } else {
+        setIsVisible(true); // Show when scrolling up
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
+  // Navigation items based on user type
+  const getNavItems = useCallback(() => {
+    const baseItems = [
+      { id: 'dashboard', icon: '📊', label: 'Início' },
+      { id: 'perfil', icon: '👤', label: 'Perfil' },
+    ];
+
+    switch (tipoUsuario) {
+      case 'admin':
+        return [
+          ...baseItems.slice(0, 1),
+          { id: 'alunos', icon: '👥', label: 'Alunos' },
+          { id: 'financeiro', icon: '💰', label: 'Financeiro' },
+          { id: 'metas', icon: '🎯', label: 'Metas' },
+          ...baseItems.slice(1),
+        ];
+      case 'professor':
+        return [
+          ...baseItems.slice(0, 1),
+          { id: 'presenca', icon: '✅', label: 'Presença' },
+          { id: 'treinos', icon: '🏐', label: 'Treinos' },
+          { id: 'aulas', icon: '📚', label: 'Aulas' },
+          ...baseItems.slice(1),
+        ];
+      case 'aluno':
+        return [
+          ...baseItems.slice(0, 1),
+          { id: 'aulas', icon: '📚', label: 'Aulas' },
+          { id: 'evolucao', icon: '📈', label: 'Evolução' },
+          { id: 'loja', icon: '🛒', label: 'Loja' },
+          ...baseItems.slice(1),
+        ];
+      default:
+        return baseItems;
+    }
+  }, [tipoUsuario]);
+
+  const navItems = getNavItems();
+
+  return (
+    <nav className={`bottom-nav ${isVisible ? 'visible' : ''}`} role="navigation" aria-label="Navegação principal">
+      <div className="flex justify-around items-center max-w-md mx-auto">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`bottom-nav-item ${activeTab === item.id ? 'active' : ''}`}
+            aria-label={`Ir para ${item.label}`}
+            aria-current={activeTab === item.id ? 'page' : undefined}
+          >
+            <span className="text-lg mb-1" role="img" aria-hidden="true">
+              {item.icon}
+            </span>
+            <span className="font-medium">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+});
+
+// Breadcrumbs responsivo e colapsável
+const ResponsiveBreadcrumbs = memo(({ items = [] }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  if (!items.length) return null;
+
+  const displayItems = isExpanded ? items : items.slice(-2); // Show only last 2 items by default
+  const hasHiddenItems = items.length > 2;
+
+  return (
+    <nav className="breadcrumbs" aria-label="Navegação estrutural">
+      <div className="flex items-center gap-2 min-w-0">
+        {hasHiddenItems && !isExpanded && (
+          <>
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="btn-touch flex items-center gap-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded"
+              aria-label="Mostrar caminho completo"
+            >
+              <span>...</span>
+            </button>
+            <ChevronRight size={16} className="text-gray-400" />
+          </>
+        )}
+        
+        {displayItems.map((item, index) => (
+          <React.Fragment key={index}>
+            {index > 0 && <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />}
+            <span 
+              className={`breadcrumb-item ${index === displayItems.length - 1 ? 'current' : ''}`}
+            >
+              {item}
+            </span>
+          </React.Fragment>
+        ))}
+        
+        {hasHiddenItems && isExpanded && (
+          <button
+            onClick={() => setIsExpanded(false)}
+            className="btn-touch text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded ml-2"
+            aria-label="Reduzir caminho"
+          >
+            <Minimize size={14} />
+          </button>
+        )}
+      </div>
+    </nav>
+  );
+});
+
+// ===============================
+// COMPONENTES DE PERFORMANCE
+// ===============================
+
+// Lazy Loading Image Component
+const LazyImage = memo(({ 
+  src, 
+  alt, 
+  className = '', 
+  fallback = null,
+  placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlmYTJhNyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhcnJlZ2FuZG8uLi48L3RleHQ+PC9zdmc+',
+  ...props 
+}) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Start loading the image when it enters viewport
+            const imgElement = entry.target;
+            imgElement.src = src;
+            observer.unobserve(imgElement);
+          }
+        });
+      },
+      { 
+        rootMargin: '50px', // Start loading 50px before the image comes into view
+        threshold: 0.1 
+      }
+    );
+
+    observer.observe(img);
+
+    return () => {
+      if (img) observer.unobserve(img);
+    };
+  }, [src]);
+
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
+  const handleError = useCallback(() => {
+    setHasError(true);
+    setIsLoaded(true);
+  }, []);
+
+  if (hasError && fallback) {
+    return fallback;
+  }
+
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <img
+        ref={imgRef}
+        src={placeholder}
+        alt={alt}
+        className={`
+          w-full h-full object-cover transition-opacity duration-300
+          ${isLoaded ? 'opacity-100' : 'opacity-0'}
+        `}
+        onLoad={handleLoad}
+        onError={handleError}
+        loading="lazy"
+        {...props}
+      />
+      
+      {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+// Responsive Card Component
+const ResponsiveCard = memo(({ 
+  children, 
+  className = '', 
+  padding = 'default',
+  hover = true,
+  ...props 
+}) => {
+  const paddingClasses = {
+    none: '',
+    sm: 'p-3 sm:p-4',
+    default: 'p-4 sm:p-6',
+    lg: 'p-6 sm:p-8'
+  };
+
+  return (
+    <div
+      className={`
+        card-responsive
+        ${paddingClasses[padding]}
+        ${hover ? 'hover:shadow-lg hover:-translate-y-1' : ''}
+        bg-white dark:bg-gray-800 
+        border border-gray-200 dark:border-gray-700
+        ${className}
+      `}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
+
+// ===============================
 // COMPONENTES DE UI MELHORADOS
 // ===============================
 
@@ -805,7 +1347,7 @@ const LoadingSpinner = memo(({ size = 'md', text = 'Carregando...' }) => {
   );
 });
 
-// Modal melhorado com acessibilidade
+// Modal melhorado com acessibilidade e responsividade total
 const Modal = memo(({ isOpen, onClose, title, children, size = 'md' }) => {
   const { isDarkMode } = useTheme();
   const modalRef = useRef(null);
@@ -814,19 +1356,40 @@ const Modal = memo(({ isOpen, onClose, title, children, size = 'md' }) => {
     sm: 'max-w-sm',
     md: 'max-w-md',
     lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
+    xl: 'max-w-4xl',
+    full: 'max-w-full'
+  };
+
+  // Mobile-first modal sizing
+  const responsiveSizeClasses = {
+    sm: 'w-[90vw] max-w-sm',
+    md: 'w-[95vw] max-w-md sm:w-[90vw] md:w-[80vw]',
+    lg: 'w-[98vw] max-w-2xl sm:w-[95vw] md:w-[85vw] lg:w-[75vw]',
+    xl: 'w-[99vw] max-w-4xl sm:w-[98vw] md:w-[90vw] lg:w-[85vw] xl:w-[80vw]',
+    full: 'w-[99vw] h-[95vh] max-w-none'
   };
 
   useEffect(() => {
     if (isOpen) {
       modalRef.current?.focus();
       document.body.style.overflow = 'hidden';
+      
+      // Prevent scrolling on mobile when modal is open
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${window.scrollY}px`;
+      document.body.style.width = '100%';
     } else {
       document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
     }
 
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
     };
   }, [isOpen]);
 
@@ -836,12 +1399,23 @@ const Modal = memo(({ isOpen, onClose, title, children, size = 'md' }) => {
     }
   }, [onClose]);
 
+  const handleBackdropClick = useCallback((e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  }, [onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className={`
+        fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4
+        bg-black/50 backdrop-blur-sm
+        animate-in fade-in duration-200
+        ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}
+      `}
+      onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
       role="dialog"
       aria-modal="true"
@@ -849,22 +1423,45 @@ const Modal = memo(({ isOpen, onClose, title, children, size = 'md' }) => {
     >
       <div 
         ref={modalRef}
-        className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto`}
+        className={`
+          ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
+          rounded-xl border shadow-2xl
+          ${responsiveSizeClasses[size]}
+          max-h-[90vh] sm:max-h-[85vh] overflow-hidden
+          animate-in zoom-in-95 duration-200
+          flex flex-col
+        `}
         tabIndex={-1}
       >
-        <div className="flex items-center justify-between mb-4">
-          <h3 id="modal-title" className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+        {/* Header */}
+        <div className={`
+          flex items-center justify-between p-4 sm:p-6
+          ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} 
+          border-b
+        `}>
+          <h3 
+            id="modal-title" 
+            className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100 truncate pr-4"
+          >
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className={`
+              btn-touch flex-shrink-0 p-2 rounded-lg transition-colors
+              ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
+              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+            `}
             aria-label="Fechar modal"
           >
             <X size={20} />
           </button>
         </div>
-        {children}
+        
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -921,7 +1518,7 @@ const Input = memo(({
   );
 });
 
-// Button melhorado com loading e acessibilidade
+// Button melhorado com loading, acessibilidade e responsividade
 const Button = memo(({ 
   children, 
   variant = 'primary', 
@@ -935,16 +1532,16 @@ const Button = memo(({
   ...props 
 }) => {
   const variantClasses = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white',
-    secondary: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200',
-    danger: 'bg-red-600 hover:bg-red-700 text-white',
-    success: 'bg-green-600 hover:bg-green-700 text-white'
+    primary: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white',
+    secondary: 'bg-gray-200 hover:bg-gray-300 active:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 dark:active:bg-gray-500 text-gray-800 dark:text-gray-200',
+    danger: 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white',
+    success: 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
   };
 
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
+    sm: 'px-3 py-2 text-sm min-h-[40px]', // Increased min-height for better touch targets
+    md: 'px-4 py-2.5 min-h-[44px]', // 44px minimum touch target
+    lg: 'px-6 py-3 text-lg min-h-[48px]'
   };
 
   const isDisabled = disabled || loading;
@@ -952,10 +1549,13 @@ const Button = memo(({
   return (
     <button
       className={`
-        inline-flex items-center justify-center rounded-lg font-medium transition-colors
+        btn-touch inline-flex items-center justify-center rounded-lg font-medium 
+        transition-all duration-200 ease-in-out
         ${variantClasses[variant]} ${sizeClasses[size]}
-        ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+        ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+        focus:ring-offset-white dark:focus:ring-offset-gray-800
+        transform active:scale-[0.98] disabled:transform-none
         ${className}
       `}
       disabled={isDisabled}
@@ -965,12 +1565,12 @@ const Button = memo(({
       {loading ? (
         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
       ) : leftIcon ? (
-        <span className="mr-2">{leftIcon}</span>
+        <span className="flex-shrink-0 mr-2">{leftIcon}</span>
       ) : null}
       
-      {children}
+      <span className="truncate">{children}</span>
       
-      {rightIcon && !loading && <span className="ml-2">{rightIcon}</span>}
+      {rightIcon && !loading && <span className="flex-shrink-0 ml-2">{rightIcon}</span>}
     </button>
   );
 });
@@ -2424,19 +3024,26 @@ const Dashboard = memo(() => {
   }, [metas]);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-          Dashboard Administrativo
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Visão geral do seu negócio em tempo real.
-        </p>
-      </div>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header Responsivo */}
+      <ResponsiveCard padding="default" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
+              Dashboard Administrativo
+            </h1>
+            <p className="text-blue-100 mt-1 text-sm sm:text-base">
+              Visão geral do seu negócio em tempo real.
+            </p>
+          </div>
+          
+          {/* Breadcrumbs */}
+          <ResponsiveBreadcrumbs items={['Dashboard', 'Administração']} />
+        </div>
+      </ResponsiveCard>
 
-      {/* Cards de estatísticas interativos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Cards de estatísticas responsivos */}
+      <div className="responsive-grid">
         <StatsCard
           title="Receita do Mês"
           value={`R$ ${stats.receitaTotal.toLocaleString('pt-BR')}`}
@@ -12804,6 +13411,21 @@ const CTFutevoleiSystem = memo(() => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { userLogado, activeTab } = useAppState();
 
+  // Auto-collapse sidebar on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarCollapsed(true);
+        setIsMobileSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Call once on mount
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 const renderContent = useCallback(() => {
   switch (activeTab) {
     case 'dashboard':
@@ -12854,18 +13476,26 @@ const renderContent = useCallback(() => {
               isCollapsed={isSidebarCollapsed} 
             />
             
-            <div className={`transition-all duration-300 ${
-              isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-            } min-h-screen flex flex-col`}>
+            <div className={`
+              transition-all duration-300 ease-in-out
+              ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'} 
+              min-h-screen flex flex-col
+              pb-16 lg:pb-0
+            `}>
               <Header 
                 toggleMobileSidebar={() => setIsMobileSidebarOpen(true)} 
                 toggleSidebarCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
               />
               
               <main className="flex-grow">
-                {renderContent()}
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+                  {renderContent()}
+                </div>
               </main>
             </div>
+
+            {/* Bottom Navigation for Mobile */}
+            <BottomNavigation />
           </>
         )}
       </div>
