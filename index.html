@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoraProCT - Sistema de Gestão</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    // Responsive breakpoints
+                    screens: {
+                        'xs': '320px',
+                        'sm': '640px',
+                        'md': '768px',
+                        'lg': '1024px',
+                        'xl': '1280px',
+                        '2xl': '1536px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Base styles for better mobile experience */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Ensure minimum touch target size */
+        button, [role="button"], input, select, textarea {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        /* Improved text readability on mobile */
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel" src="atual.jsx"></script>
+    <script type="text/babel">
+        const { createElement } = React;
+        const { createRoot } = ReactDOM;
+        
+        const root = createRoot(document.getElementById('root'));
+        root.render(createElement(App));
+    </script>
+</body>
+</html>

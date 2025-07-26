@@ -840,7 +840,7 @@ const Modal = memo(({ isOpen, onClose, title, children, size = 'md' }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       onKeyDown={handleKeyDown}
       role="dialog"
@@ -849,19 +849,22 @@ const Modal = memo(({ isOpen, onClose, title, children, size = 'md' }) => {
     >
       <div 
         ref={modalRef}
-        className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto`}
+        className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 sm:p-6 w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto`}
         tabIndex={-1}
       >
-        <div className="flex items-center justify-between mb-4">
-          <h3 id="modal-title" className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+          <h3 id="modal-title" className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100 truncate pr-2">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className={`p-3 rounded-lg transition-colors touch-manipulation flex-shrink-0 ${
+              isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+            }`}
+            style={{ minHeight: '44px', minWidth: '44px' }}
             aria-label="Fechar modal"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
         {children}
@@ -886,11 +889,11 @@ const Input = memo(({
   const errorId = `${inputId}-error`;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       {label && (
         <label 
           htmlFor={inputId}
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+          className="block text-sm sm:text-base font-medium text-gray-700 dark:text-gray-200"
         >
           {label}
           {required && <span className="text-red-500 ml-1" aria-label="obrigatório">*</span>}
@@ -901,7 +904,7 @@ const Input = memo(({
         type={type}
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? errorId : ariaDescribedBy}
-        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+        className={`w-full px-3 py-3 sm:py-4 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors touch-manipulation ${
           error 
             ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
             : 'border-gray-300 dark:border-gray-600'
@@ -910,6 +913,7 @@ const Input = memo(({
             ? 'bg-gray-700 text-white placeholder-gray-400' 
             : 'bg-white text-gray-900 placeholder-gray-500'
         } ${className}`}
+        style={{ minHeight: '44px' }}
         {...props}
       />
       {error && (
@@ -942,9 +946,9 @@ const Button = memo(({
   };
 
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-4 py-3 text-base', 
+    lg: 'px-6 py-4 text-lg'
   };
 
   const isDisabled = disabled || loading;
@@ -952,12 +956,13 @@ const Button = memo(({
   return (
     <button
       className={`
-        inline-flex items-center justify-center rounded-lg font-medium transition-colors
+        inline-flex items-center justify-center rounded-lg font-medium transition-colors touch-manipulation
         ${variantClasses[variant]} ${sizeClasses[size]}
         ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
         ${className}
       `}
+      style={{ minHeight: '44px', minWidth: '44px' }}
       disabled={isDisabled}
       aria-label={ariaLabel}
       {...props}
@@ -1954,10 +1959,11 @@ if (tipoUsuario === 'admin') {
   </div>
             <button 
               onClick={() => setMobileOpen(false)} 
-              className="lg:hidden p-2 rounded-lg hover:bg-white/10 text-white"
+              className="lg:hidden p-3 rounded-lg hover:bg-white/10 text-white touch-manipulation"
+              style={{ minHeight: '44px', minWidth: '44px' }}
               aria-label="Fechar menu"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>
@@ -1977,9 +1983,10 @@ if (tipoUsuario === 'admin') {
                   {/* 🆕 Cabeçalho da Seção (Clicável) */}
                   <button
                     onClick={() => !isCollapsed && toggleSection(section.id)}
-                    className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                    className={`w-full flex items-center px-3 py-3 sm:py-2.5 rounded-lg transition-all duration-200 touch-manipulation ${
                       isCollapsed ? 'justify-center' : 'justify-between'
                     } text-blue-100 hover:bg-white/10 hover:text-white group`}
+                    style={{ minHeight: '44px' }}
                     disabled={isCollapsed}
                   >
                     <div className="flex items-center">
@@ -2019,13 +2026,14 @@ if (tipoUsuario === 'admin') {
                                 setActiveTab(item.id); 
                                 setMobileOpen(false); 
                               }}
-                              className={`group w-full flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
+                              className={`group w-full flex items-center px-3 py-3 sm:py-2 rounded-lg transition-all duration-200 touch-manipulation ${
                                 isCollapsed ? 'justify-center' : 'justify-between'
                               } ${
                                 isActive 
                                   ? 'bg-white/20 text-white shadow-lg border-l-2 border-white/40' 
                                   : 'text-blue-100 hover:bg-white/10 hover:text-white'
                               }`}
+                              style={{ minHeight: '44px' }}
                               aria-current={isActive ? 'page' : undefined}
                               title={isCollapsed ? item.label : undefined}
                             >
@@ -2078,9 +2086,10 @@ if (tipoUsuario === 'admin') {
           
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors ${
+            className={`w-full flex items-center px-3 py-3 sm:py-2.5 rounded-lg transition-colors touch-manipulation ${
               isCollapsed ? 'justify-center' : 'justify-start'
             } text-blue-100 hover:bg-red-500/20 hover:text-red-200`}
+            style={{ minHeight: '44px' }}
             aria-label="Sair do sistema"
             title={isCollapsed ? 'Sair' : undefined}
           >
@@ -2140,55 +2149,63 @@ const Header = memo(({ toggleMobileSidebar, toggleSidebarCollapse }) => {
     <header className={`${
       isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
     } shadow-sm border-b`}>
-      <div className="flex items-center justify-between px-6 py-4">
-        <div className="flex items-center">
+      <div className="flex items-center justify-between px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+        <div className="flex items-center min-w-0 flex-1">
           <button
             onClick={toggleSidebarCollapse}
-            className={`hidden lg:block mr-4 p-2 rounded-md transition-colors ${
+            className={`hidden lg:block mr-2 sm:mr-4 p-3 rounded-md transition-colors touch-manipulation ${
               isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
             }`}
+            style={{ minHeight: '44px', minWidth: '44px' }}
             aria-label="Alternar sidebar"
           >
-            <Menu size={24} />
+            <Menu size={20} />
           </button>
           
           <button
             onClick={toggleMobileSidebar}
-            className={`lg:hidden mr-4 p-2 rounded-md transition-colors ${
+            className={`lg:hidden mr-2 sm:mr-4 p-3 rounded-md transition-colors touch-manipulation ${
               isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
             }`}
+            style={{ minHeight: '44px', minWidth: '44px' }}
             aria-label="Abrir menu"
           >
-            <Menu size={24} />
+            <Menu size={20} />
           </button>
           
-          <h2 className={`text-2xl font-bold capitalize ${
+          <h2 className={`text-lg sm:text-xl lg:text-2xl font-bold capitalize truncate ${
             isDarkMode ? 'text-gray-100' : 'text-gray-800'
           }`}>
             {getPageTitle()}
           </h2>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-3 rounded-lg transition-colors touch-manipulation ${
               isDarkMode 
                 ? 'text-yellow-400 hover:bg-gray-700' 
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
+            style={{ minHeight: '44px', minWidth: '44px' }}
             aria-label={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
           >
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
           {/* Cart (só para alunos) */}
           {tipoUsuario === 'aluno' && (
-            <button className="relative p-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700">
-              <ShoppingCart size={20} />
+            <button 
+              className={`relative p-3 rounded-lg transition-colors touch-manipulation ${
+                isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+              }`}
+              style={{ minHeight: '44px', minWidth: '44px' }}
+            >
+              <ShoppingCart size={18} />
               {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                   {cartItemCount}
                 </span>
               )}
@@ -2199,15 +2216,16 @@ const Header = memo(({ toggleMobileSidebar, toggleSidebarCollapse }) => {
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-3 rounded-lg transition-colors touch-manipulation ${
                 isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
               }`}
+              style={{ minHeight: '44px', minWidth: '44px' }}
               aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
               aria-expanded={showNotifications}
             >
-              <Bell size={20} />
+              <Bell size={18} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                   {unreadCount}
                 </span>
               )}
@@ -2215,16 +2233,17 @@ const Header = memo(({ toggleMobileSidebar, toggleSidebarCollapse }) => {
 
             {/* Dropdown de Notificações */}
             {showNotifications && (
-              <div className={`absolute top-full right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-lg shadow-lg border z-50 ${
+              <div className={`absolute top-full right-0 mt-2 w-80 sm:w-96 max-h-96 overflow-y-auto rounded-lg shadow-lg border z-50 ${
                 isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
               }`}>
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">Notificações</h3>
+                    <h3 className="font-semibold text-sm sm:text-base">Notificações</h3>
                     {notifications.length > 0 && (
                       <button
                         onClick={clearNotifications}
-                        className="text-sm text-blue-600 hover:text-blue-800"
+                        className="text-sm text-blue-600 hover:text-blue-800 p-2 rounded touch-manipulation"
+                        style={{ minHeight: '44px' }}
                       >
                         Limpar todas
                       </button>
@@ -2241,21 +2260,22 @@ const Header = memo(({ toggleMobileSidebar, toggleSidebarCollapse }) => {
                     notifications.slice(0, 10).map((notification) => (
                       <div
                         key={notification.id}
-                        className={`p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
+                        className={`p-3 sm:p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer touch-manipulation ${
                           !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                         }`}
+                        style={{ minHeight: '44px' }}
                         onClick={() => markAsRead(notification.id)}
                       >
                         <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{notification.title}</p>
-                            <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{notification.title}</p>
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{notification.message}</p>
                             <p className="text-xs text-gray-400 mt-2">
                               {new Date(notification.timestamp).toLocaleString('pt-BR')}
                             </p>
                           </div>
                           {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1" />
+                            <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1 flex-shrink-0" />
                           )}
                         </div>
                       </div>
@@ -2267,20 +2287,20 @@ const Header = memo(({ toggleMobileSidebar, toggleSidebarCollapse }) => {
           </div>
 
           {/* User Info */}
-          <div className="flex items-center space-x-3">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
               tipoUsuario === 'admin' ? 'bg-blue-600' : 
               tipoUsuario === 'professor' ? 'bg-green-600' : 'bg-purple-600'
             }`}>
               <User className="text-white" size={16} />
             </div>
-            <div className="hidden md:block">
-              <p className={`text-sm font-medium ${
+            <div className="hidden sm:block min-w-0">
+              <p className={`text-sm font-medium truncate ${
                 isDarkMode ? 'text-gray-200' : 'text-gray-700'
               }`}>
                 {userLogado ? userLogado.nome : 'Usuário'}
               </p>
-              <p className={`text-xs capitalize ${
+              <p className={`text-xs capitalize truncate ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 {tipoUsuario}
@@ -2306,28 +2326,28 @@ const StatsCard = memo(({ title, value, icon: Icon, color, subtitle, trend, onCl
 
   const cardClasses = `
     ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}
-    rounded-xl shadow-sm p-6 border transition-all duration-300
-    ${onClick ? 'cursor-pointer hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-500' : ''}
+    rounded-xl shadow-sm p-4 sm:p-6 border transition-all duration-300 touch-manipulation
+    ${onClick ? 'cursor-pointer hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-500 active:scale-95' : ''}
   `;
 
   return (
-    <div className={cardClasses} onClick={onClick}>
+    <div className={cardClasses} onClick={onClick} style={onClick ? { minHeight: '44px' } : {}}>
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        <div className="flex-1 min-w-0">
+          <p className={`text-xs sm:text-sm font-medium truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             {title}
           </p>
           <div className="flex items-baseline space-x-2 mt-1">
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
+            <p className={`text-xl sm:text-2xl font-bold ${color} truncate`}>{value}</p>
             {getTrendIcon()}
           </div>
           {subtitle && (
-            <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+            <p className={`text-xs mt-1 truncate ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
               {subtitle}
             </p>
           )}
         </div>
-        <div className={`p-3 rounded-lg ${
+        <div className={`p-2 sm:p-3 rounded-lg flex-shrink-0 ml-2 ${
           color.includes('green') ? 'bg-green-100 dark:bg-green-900/20' :
           color.includes('blue') ? 'bg-blue-100 dark:bg-blue-900/20' :
           color.includes('purple') ? 'bg-purple-100 dark:bg-purple-900/20' :
@@ -2335,7 +2355,7 @@ const StatsCard = memo(({ title, value, icon: Icon, color, subtitle, trend, onCl
           color.includes('red') ? 'bg-red-100 dark:bg-red-900/20' :
           'bg-gray-100 dark:bg-gray-700'
         }`}>
-          <Icon className={color} size={24} />
+          <Icon className={color} size={20} />
         </div>
       </div>
     </div>
@@ -2424,19 +2444,19 @@ const Dashboard = memo(() => {
   }, [metas]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+      <div className="px-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
           Dashboard Administrativo
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
           Visão geral do seu negócio em tempo real.
         </p>
       </div>
 
       {/* Cards de estatísticas interativos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <StatsCard
           title="Receita do Mês"
           value={`R$ ${stats.receitaTotal.toLocaleString('pt-BR')}`}
@@ -2474,36 +2494,42 @@ const Dashboard = memo(() => {
       </div>
 
       {/* Ações Rápidas e Metas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Ações Rápidas */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4">
             ⚡ Ações Rápidas
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {acoesRapidas.pendentes.length === 0 && acoesRapidas.proximosVencimentos.length === 0 ? (
-                <div className="text-center py-8">
-                    <CheckCircle className="mx-auto text-green-500 mb-2" size={32}/>
-                    <p className="text-gray-500 dark:text-gray-400">Nenhuma ação imediata necessária. Tudo em dia!</p>
+                <div className="text-center py-6 sm:py-8">
+                    <CheckCircle className="mx-auto text-green-500 mb-2" size={28}/>
+                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">Nenhuma ação imediata necessária. Tudo em dia!</p>
                 </div>
             ) : (
                 <>
                     {acoesRapidas.pendentes.map(aluno => (
-                        <div key={aluno.id} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                            <div>
-                                <p className="font-medium text-red-800 dark:text-red-300">{aluno.nome}</p>
-                                <p className="text-xs text-red-600 dark:text-red-400">Vencido em: {new Date(aluno.vencimento).toLocaleDateString('pt-BR')}</p>
+                        <div key={aluno.id} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg gap-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-red-800 dark:text-red-300 truncate">{aluno.nome}</p>
+                                <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 truncate">Vencido em: {new Date(aluno.vencimento).toLocaleDateString('pt-BR')}</p>
                             </div>
-                            <Button size="sm" variant="danger" leftIcon={<Phone size={14}/>}>Contatar</Button>
+                            <Button size="sm" variant="danger" leftIcon={<Phone size={14}/>} className="flex-shrink-0">
+                              <span className="hidden sm:inline">Contatar</span>
+                              <span className="sm:hidden">📞</span>
+                            </Button>
                         </div>
                     ))}
                     {acoesRapidas.proximosVencimentos.map(aluno => (
-                        <div key={aluno.id} className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                            <div>
-                                <p className="font-medium text-yellow-800 dark:text-yellow-300">{aluno.nome}</p>
-                                <p className="text-xs text-yellow-600 dark:text-yellow-400">Vence em: {new Date(aluno.vencimento).toLocaleDateString('pt-BR')}</p>
+                        <div key={aluno.id} className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg gap-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-yellow-800 dark:text-yellow-300 truncate">{aluno.nome}</p>
+                                <p className="text-xs sm:text-sm text-yellow-600 dark:text-yellow-400 truncate">Vence em: {new Date(aluno.vencimento).toLocaleDateString('pt-BR')}</p>
                             </div>
-                            <Button size="sm" variant="secondary">Lembrar</Button>
+                            <Button size="sm" variant="secondary" className="flex-shrink-0">
+                              <span className="hidden sm:inline">Lembrar</span>
+                              <span className="sm:hidden">🔔</span>
+                            </Button>
                         </div>
                     ))}
                 </>
@@ -2512,22 +2538,22 @@ const Dashboard = memo(() => {
         </div>
         
         {/* Metas Ativas */}
-        <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">🎯 Metas Ativas</h3>
-            <Button size="sm" variant="secondary" onClick={() => setActiveTab('metas')}>Ver Todas</Button>
+        <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-4 gap-2">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100">🎯 Metas Ativas</h3>
+            <Button size="sm" variant="secondary" onClick={() => setActiveTab('metas')} className="self-end sm:self-auto">Ver Todas</Button>
           </div>
            {metasAtivas.length === 0 ? (
-                <div className="text-center py-8">
-                     <Target className="mx-auto text-gray-400 mb-2" size={32}/>
-                    <p className="text-gray-500 dark:text-gray-400">Nenhuma meta ativa no momento.</p>
+                <div className="text-center py-6 sm:py-8">
+                     <Target className="mx-auto text-gray-400 mb-2" size={28}/>
+                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">Nenhuma meta ativa no momento.</p>
                 </div>
            ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
                 {metasAtivas.map(meta => (
                   <div key={meta.id}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600 dark:text-gray-400">{meta.titulo}</span>
+                    <div className="flex justify-between text-xs sm:text-sm mb-1">
+                      <span className="text-gray-600 dark:text-gray-400 truncate pr-2">{meta.titulo}</span>
                       <span className="font-medium">{meta.progresso}%</span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -12862,7 +12888,7 @@ const renderContent = useCallback(() => {
                 toggleSidebarCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
               />
               
-              <main className="flex-grow">
+              <main className="flex-grow p-3 sm:p-4 lg:p-6">
                 {renderContent()}
               </main>
             </div>
