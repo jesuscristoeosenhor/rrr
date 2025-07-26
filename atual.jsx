@@ -882,6 +882,10 @@ const Input = memo(({
   id,
   className = '',
   'aria-describedby': ariaDescribedBy,
+  // Filter out non-DOM props that shouldn't be passed to input element
+  leftIcon,
+  rightIcon,
+  loading,
   ...props 
 }) => {
   const { isDarkMode } = useTheme();
