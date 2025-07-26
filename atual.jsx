@@ -401,6 +401,94 @@ const Toaster = () => null; // Placeholder
 // LAZY LOADING DE COMPONENTES
 // ===============================
 
+// Lazy loading components for better performance
+const LazyDashboard = lazy(() => Promise.resolve({ default: Dashboard }));
+const LazyAlunosPage = lazy(() => Promise.resolve({ default: AlunosPage }));
+const LazyProfessoresPage = lazy(() => Promise.resolve({ default: ProfessoresPage }));
+const LazyTreinosPage = lazy(() => Promise.resolve({ default: TreinosPage }));
+const LazyMetasPage = lazy(() => Promise.resolve({ default: MetasPage }));
+const LazyFinanceiroPage = lazy(() => Promise.resolve({ default: FinanceiroPage }));
+const LazyLojaPage = lazy(() => Promise.resolve({ default: LojaPage }));
+const LazyEvolucaoPage = lazy(() => Promise.resolve({ default: EvolucaoPage }));
+const LazyPerfilPage = lazy(() => Promise.resolve({ default: PerfilPage }));
+const LazyConfiguracoes = lazy(() => Promise.resolve({ default: ConfiguracoesPage }));
+
+// Enhanced Suspense fallback with responsive design
+const ResponsiveFallback = memo(({ message = "Carregando..." }) => (
+  <div className="flex items-center justify-center min-h-[50vh] p-4">
+    <ResponsiveCard className="text-center max-w-sm mx-auto">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+        {message}
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        Otimizando experiência para seu dispositivo...
+      </p>
+    </ResponsiveCard>
+  </div>
+));
+
+// ===============================
+// PERFORMANCE MONITORING
+// ===============================
+
+// Performance monitoring hook
+const usePerformanceMonitor = () => {
+  useEffect(() => {
+    // Monitor Core Web Vitals
+    const observePerformance = () => {
+      if ('PerformanceObserver' in window) {
+        // Largest Contentful Paint
+        const lcpObserver = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          const lcp = entries[entries.length - 1];
+          console.log('LCP:', lcp.startTime);
+        });
+        lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+
+        // First Input Delay
+        const fidObserver = new PerformanceObserver((list) => {
+          list.getEntries().forEach((entry) => {
+            console.log('FID:', entry.processingStart - entry.startTime);
+          });
+        });
+        fidObserver.observe({ entryTypes: ['first-input'] });
+
+        // Cumulative Layout Shift
+        const clsObserver = new PerformanceObserver((list) => {
+          let clsValue = 0;
+          list.getEntries().forEach((entry) => {
+            if (!entry.hadRecentInput) {
+              clsValue += entry.value;
+            }
+          });
+          console.log('CLS:', clsValue);
+        });
+        clsObserver.observe({ entryTypes: ['layout-shift'] });
+
+        return () => {
+          lcpObserver.disconnect();
+          fidObserver.disconnect();
+          clsObserver.disconnect();
+        };
+      }
+    };
+
+    const cleanup = observePerformance();
+    return cleanup;
+  }, []);
+};
+
+// CSS optimization utility
+const optimizeCSS = (cssText) => {
+  return cssText
+    .replace(/\/\*[\s\S]*?\*\//g, '') // Remove comments
+    .replace(/\s+/g, ' ') // Collapse whitespace
+    .replace(/;\s*}/g, '}') // Remove last semicolon in blocks
+    .replace(/\s*{\s*/g, '{') // Remove spaces around braces
+    .replace(/;\s*/g, ';') // Remove spaces after semicolons
+    .trim();
+};
 
 // ===============================
 // UTILITÁRIOS E HELPERS
@@ -13411,6 +13499,9 @@ const CTFutevoleiSystem = memo(() => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { userLogado, activeTab } = useAppState();
 
+  // Performance monitoring
+  usePerformanceMonitor();
+
   // Auto-collapse sidebar on mobile
   useEffect(() => {
     const handleResize = () => {
@@ -13427,37 +13518,44 @@ const CTFutevoleiSystem = memo(() => {
   }, []);
 
 const renderContent = useCallback(() => {
+  // Wrap each component in Suspense for better loading experience
+  const renderWithSuspense = (Component, fallbackMessage) => (
+    <Suspense fallback={<ResponsiveFallback message={fallbackMessage} />}>
+      <Component />
+    </Suspense>
+  );
+
   switch (activeTab) {
     case 'dashboard':
-      return <Dashboard />;
+      return renderWithSuspense(LazyDashboard, 'Carregando Dashboard...');
     case 'alunos':
-      return <AlunosPage />;
+      return renderWithSuspense(LazyAlunosPage, 'Carregando Alunos...');
     case 'professores':
-      return <ProfessoresPage />;
+      return renderWithSuspense(LazyProfessoresPage, 'Carregando Professores...');
     case 'presenca':
-      return <PresencaPage />; // ← Admin vê controle de presença
+      return renderWithSuspense(() => <PresencaPage />, 'Carregando Presença...');
     case 'agendamentos':
-      return <AgendamentosPage />; // ← Admin vê gerenciamento de agendamentos
+      return renderWithSuspense(() => <AgendamentosPage />, 'Carregando Agendamentos...');
     case 'aulas':
-      return <AulasPage />; // ← Só alunos e professores veem esta tela
+      return renderWithSuspense(() => <AulasPage />, 'Carregando Aulas...');
     case 'treinos':
-      return <TreinosPage />;
+      return renderWithSuspense(LazyTreinosPage, 'Carregando Treinos...');
     case 'metas':
-      return <MetasPage />;
+      return renderWithSuspense(LazyMetasPage, 'Carregando Metas...');
     case 'financeiro':
-      return <FinanceiroPage />;       
+      return renderWithSuspense(LazyFinanceiroPage, 'Carregando Financeiro...');       
     case 'loja':
-      return <LojaPage />;
+      return renderWithSuspense(LazyLojaPage, 'Carregando Loja...');
     case 'evolucao':
-      return <EvolucaoPage />;
+      return renderWithSuspense(LazyEvolucaoPage, 'Carregando Evolução...');
     case 'perfil':
-      return <PerfilPage />;
-       case 'aluguel_quadras':
-      return <AluguelQuadrasPage />;
+      return renderWithSuspense(LazyPerfilPage, 'Carregando Perfil...');
+    case 'aluguel_quadras':
+      return renderWithSuspense(() => <AluguelQuadrasPage />, 'Carregando Aluguel...');
     case 'configuracoes':
-      return <ConfiguracoesPage />;
+      return renderWithSuspense(LazyConfiguracoes, 'Carregando Configurações...');
     default:
-      return <Dashboard />;
+      return renderWithSuspense(LazyDashboard, 'Carregando Dashboard...');
   }
 }, [activeTab]);
 

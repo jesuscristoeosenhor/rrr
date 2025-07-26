@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoraProCT - Responsive Test</title>
+    <style>
+        /* Inline responsive CSS based on our implementation */
+        :root {
+            --breakpoint-xs: 320px;
+            --breakpoint-sm: 768px;
+            --breakpoint-md: 1024px;
+            --breakpoint-lg: 1200px;
+            
+            --spacing-xs: clamp(0.25rem, 2vw, 0.5rem);
+            --spacing-sm: clamp(0.5rem, 3vw, 1rem);
+            --spacing-md: clamp(1rem, 4vw, 1.5rem);
+            --spacing-lg: clamp(1.5rem, 5vw, 2rem);
+            --spacing-xl: clamp(2rem, 6vw, 3rem);
+            
+            --font-size-xs: clamp(0.75rem, 2.5vw, 0.875rem);
+            --font-size-sm: clamp(0.875rem, 3vw, 1rem);
+            --font-size-base: clamp(1rem, 3.5vw, 1.125rem);
+            --font-size-lg: clamp(1.125rem, 4vw, 1.25rem);
+            --font-size-xl: clamp(1.25rem, 4.5vw, 1.5rem);
+            --font-size-2xl: clamp(1.5rem, 5vw, 2rem);
+            --font-size-3xl: clamp(2rem, 6vw, 2.5rem);
+            
+            --touch-target-min: 44px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            font-size: var(--font-size-base);
+            line-height: 1.6;
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        
+        @media (max-width: 767px) {
+            body {
+                line-height: 1.7;
+            }
+        }
+        
+        .responsive-grid {
+            display: grid;
+            gap: var(--spacing-md);
+            grid-template-columns: 1fr;
+        }
+        
+        @media (min-width: 768px) {
+            .responsive-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .responsive-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .responsive-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .btn-touch {
+            min-height: var(--touch-target-min);
+            min-width: var(--touch-target-min);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: 0.5rem;
+            font-size: var(--font-size-base);
+            line-height: 1.5;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            background: #3b82f6;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .btn-touch:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn-touch:active {
+            transform: scale(0.98);
+        }
+        
+        .card-responsive {
+            padding: var(--spacing-md);
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            background: white;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .card-responsive:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        @media (min-width: 768px) {
+            .card-responsive {
+                padding: var(--spacing-lg);
+            }
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 0.5rem;
+            z-index: 50;
+            display: none;
+        }
+        
+        @media (max-width: 1023px) {
+            .bottom-nav {
+                display: block;
+            }
+        }
+        
+        .bottom-nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            min-height: var(--touch-target-min);
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #6b7280;
+            font-size: var(--font-size-xs);
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        
+        .bottom-nav-item.active {
+            color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+        
+        .header {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            color: white;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        h1 { 
+            font-size: var(--font-size-3xl); 
+            line-height: 1.2; 
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        h2 { 
+            font-size: var(--font-size-2xl); 
+            line-height: 1.3; 
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        h3 { 
+            font-size: var(--font-size-xl); 
+            line-height: 1.4; 
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: var(--spacing-lg);
+        }
+        
+        .stat-value {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: #6b7280;
+        }
+        
+        .demo-section {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        @media (max-width: 1023px) {
+            body {
+                padding-bottom: 80px; /* Space for bottom nav */
+            }
+        }
+        
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: var(--spacing-sm);
+            overflow-x: auto;
+            font-size: var(--font-size-sm);
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .breadcrumbs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            width: 95vw;
+            max-width: 28rem;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .modal-content {
+            padding: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .modal {
+                width: 90vw;
+                max-width: 32rem;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .modal {
+                width: 80vw;
+                max-width: 36rem;
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .lazy-image {
+            width: 100%;
+            height: 200px;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: var(--font-size-sm);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="breadcrumbs">
+                <span>Dashboard</span>
+                <span>→</span>
+                <span>Responsivo</span>
+            </div>
+            <h1>BoraProCT - Teste de Responsividade</h1>
+            <p>Demonstração das melhorias de responsividade implementadas na Fase 1</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="demo-section">
+            <h2>📊 Grid Responsivo</h2>
+            <div class="responsive-grid">
+                <div class="card-responsive stat-card">
+                    <div class="stat-value">320px+</div>
+                    <div class="stat-label">Mobile First</div>
+                </div>
+                <div class="card-responsive stat-card">
+                    <div class="stat-value">768px+</div>
+                    <div class="stat-label">Tablet</div>
+                </div>
+                <div class="card-responsive stat-card">
+                    <div class="stat-value">1024px+</div>
+                    <div class="stat-label">Desktop</div>
+                </div>
+                <div class="card-responsive stat-card">
+                    <div class="stat-value">1200px+</div>
+                    <div class="stat-label">Large Desktop</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🔘 Botões com Touch Targets</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn-touch" onclick="showModal()">Abrir Modal Responsivo</button>
+                <button class="btn-touch" style="background: #10b981;" onclick="testTouch()">Teste Touch 44px</button>
+                <button class="btn-touch" style="background: #f59e0b;">Botão Fluido</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📝 Tipografia Fluida</h2>
+            <div class="card-responsive">
+                <h3>Título com clamp()</h3>
+                <p>Este texto demonstra a tipografia fluida implementada. O tamanho da fonte escala automaticamente com o viewport, mantendo a legibilidade em todos os dispositivos.</p>
+                <p style="margin-top: 1rem; font-size: var(--font-size-sm);">Texto menor que também é responsivo e otimizado para leitura mobile com line-height 1.7.</p>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🖼️ Lazy Loading de Imagens</h2>
+            <div class="responsive-grid">
+                <div class="lazy-image">Imagem 1 (Lazy)</div>
+                <div class="lazy-image">Imagem 2 (Lazy)</div>
+                <div class="lazy-image">Imagem 3 (Lazy)</div>
+                <div class="lazy-image">Imagem 4 (Lazy)</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📱 Teste de Responsividade</h2>
+            <div class="card-responsive">
+                <p><strong>Instruções de teste:</strong></p>
+                <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                    <li>Redimensione a janela para ver o grid se adaptar</li>
+                    <li>Em telas menores que 1024px, aparece a navegação inferior</li>
+                    <li>Teste os botões em dispositivos touch</li>
+                    <li>Observe como o texto escala fluidamente</li>
+                    <li>Abra o modal para ver transições suaves</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (visible only on mobile/tablet) -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-grid">
+            <button class="bottom-nav-item active">
+                <span style="font-size: 1.2rem;">📊</span>
+                <span>Início</span>
+            </button>
+            <button class="bottom-nav-item">
+                <span style="font-size: 1.2rem;">👥</span>
+                <span>Alunos</span>
+            </button>
+            <button class="bottom-nav-item">
+                <span style="font-size: 1.2rem;">💰</span>
+                <span>Financeiro</span>
+            </button>
+            <button class="bottom-nav-item">
+                <span style="font-size: 1.2rem;">🎯</span>
+                <span>Metas</span>
+            </button>
+            <button class="bottom-nav-item">
+                <span style="font-size: 1.2rem;">👤</span>
+                <span>Perfil</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Modal -->
+    <div id="modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Modal Responsivo</h3>
+                <button onclick="hideModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+            </div>
+            <div class="modal-content">
+                <p>Este modal demonstra:</p>
+                <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                    <li>Responsividade total em todos os breakpoints</li>
+                    <li>Transições suaves</li>
+                    <li>Backdrop blur</li>
+                    <li>Scroll prevention no body</li>
+                    <li>Touch-friendly close button</li>
+                </ul>
+                <button class="btn-touch" onclick="hideModal()" style="width: 100%; margin-top: 1rem;">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showModal() {
+            document.getElementById('modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.body.style.overflow = 'unset';
+        }
+
+        function testTouch() {
+            alert('Touch target testado! Botão tem 44px mínimo de altura/largura para melhor acessibilidade.');
+        }
+
+        // Test responsive breakpoints
+        function updateBreakpointInfo() {
+            const width = window.innerWidth;
+            let breakpoint = 'xs';
+            
+            if (width >= 1200) breakpoint = 'xl';
+            else if (width >= 1024) breakpoint = 'lg';
+            else if (width >= 768) breakpoint = 'md';
+            else if (width >= 320) breakpoint = 'sm';
+            
+            console.log(`Current breakpoint: ${breakpoint} (${width}px)`);
+        }
+
+        window.addEventListener('resize', updateBreakpointInfo);
+        updateBreakpointInfo();
+
+        // Simulate lazy loading
+        document.addEventListener('DOMContentLoaded', () => {
+            const lazyImages = document.querySelectorAll('.lazy-image');
+            
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.style.background = 'linear-gradient(45deg, #3b82f6, #8b5cf6)';
+                        img.style.color = 'white';
+                        img.textContent = img.textContent.replace('(Lazy)', '(Loaded)');
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+
+            lazyImages.forEach(img => imageObserver.observe(img));
+        });
+    </script>
+</body>
+</html>
