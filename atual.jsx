@@ -6503,6 +6503,400 @@ const SociosPage = memo(() => {
   );
 });
 
+// 🆕 COMPONENTE DE DISTRIBUIÇÃO DE LUCROS POR UNIDADE (NOVO)
+const DistribuicaoLucros = memo(({ unidadeSelecionada }) => {
+  const { 
+    sociosPorUnidade, 
+    financeirosPorUnidade, 
+    setFinanceirosPorUnidade,
+    financeiro 
+  } = useAppState();
+  const { addNotification } = useNotifications();
+  const { isDarkMode } = useTheme();
+  
+  const [showModal, setShowModal] = useState(false);
+  const [valorDistribuir, setValorDistribuir] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Sócios da unidade selecionada
+  const sociosUnidade = useMemo(() => {
+    if (!unidadeSelecionada) return [];
+    return sociosPorUnidade[unidadeSelecionada] || [];
+  }, [sociosPorUnidade, unidadeSelecionada]);
+
+  // Verificar se percentuais somam 100%
+  const totalPercentual = useMemo(() => {
+    return sociosUnidade.reduce((total, socio) => total + (socio.percentual || 0), 0);
+  }, [sociosUnidade]);
+
+  // Calcular lucro da unidade no mês atual
+  const lucroUnidade = useMemo(() => {
+    if (!unidadeSelecionada) return 0;
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    // Filtrar transações financeiras da unidade no mês atual
+    const transacoesUnidade = financeiro.filter(t => {
+      const transacaoDate = new Date(t.data);
+      const mesmaUnidade = t.unidade === unidadeSelecionada || !t.unidade; // Se não tem unidade, inclui por compatibilidade
+      return mesmaUnidade && 
+             transacaoDate.getMonth() === currentMonth && 
+             transacaoDate.getFullYear() === currentYear &&
+             t.status === 'pago';
+    });
+
+    const receitas = transacoesUnidade
+      .filter(t => t.tipo === 'receita')
+      .reduce((acc, t) => acc + t.valor, 0);
+    
+    const despesas = transacoesUnidade
+      .filter(t => t.tipo === 'despesa')
+      .reduce((acc, t) => acc + t.valor, 0);
+
+    return receitas - despesas;
+  }, [financeiro, unidadeSelecionada]);
+
+  // Distribuições já realizadas
+  const distribuicoesRealizadas = useMemo(() => {
+    if (!unidadeSelecionada) return [];
+    const financeiroUnidade = financeirosPorUnidade[unidadeSelecionada];
+    return financeiroUnidade?.distribuicoes || [];
+  }, [financeirosPorUnidade, unidadeSelecionada]);
+
+  // Calcular distribuição dos lucros
+  const calcularDistribuicao = useCallback((valor) => {
+    if (!valor || sociosUnidade.length === 0) return [];
+    
+    const valorTotal = parseFloat(valor);
+    return sociosUnidade.map(socio => ({
+      socioId: socio.id,
+      nome: socio.nome,
+      percentual: socio.percentual,
+      valor: (valorTotal * socio.percentual) / 100
+    }));
+  }, [sociosUnidade]);
+
+  // Salvar distribuição
+  const handleDistribuir = useCallback(() => {
+    if (!valorDistribuir || !unidadeSelecionada) {
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Preencha o valor a distribuir'
+      });
+      return;
+    }
+
+    if (totalPercentual !== 100) {
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Os percentuais dos sócios devem somar exatamente 100%'
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const valorTotal = parseFloat(valorDistribuir);
+      const distribuicao = calcularDistribuicao(valorTotal);
+      
+      const novaDistribuicao = {
+        id: Date.now(),
+        data: new Date().toISOString().split('T')[0],
+        valorTotal,
+        descricao: descricao || `Distribuição de lucros - ${new Date().toLocaleDateString('pt-BR')}`,
+        distribuicao,
+        criadaEm: new Date().toISOString()
+      };
+
+      setFinanceirosPorUnidade(prev => {
+        const newFinanceiros = { ...prev };
+        if (!newFinanceiros[unidadeSelecionada]) {
+          newFinanceiros[unidadeSelecionada] = { receitas: [], despesas: [], distribuicoes: [] };
+        }
+        newFinanceiros[unidadeSelecionada].distribuicoes = [
+          ...newFinanceiros[unidadeSelecionada].distribuicoes,
+          novaDistribuicao
+        ];
+        return newFinanceiros;
+      });
+
+      addNotification({
+        type: 'success',
+        title: 'Distribuição realizada',
+        message: `R$ ${valorTotal.toFixed(2)} distribuídos entre ${sociosUnidade.length} sócios`
+      });
+
+      setShowModal(false);
+      setValorDistribuir('');
+      setDescricao('');
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao realizar distribuição'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [valorDistribuir, unidadeSelecionada, totalPercentual, calcularDistribuicao, descricao, sociosUnidade, setFinanceirosPorUnidade, addNotification]);
+
+  if (!unidadeSelecionada) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+        <div className="text-center">
+          <DollarSign className="mx-auto text-gray-400 mb-4" size={64} />
+          <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
+            🏢 Selecione uma Unidade
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400">
+            Escolha uma unidade para visualizar e realizar distribuições de lucro
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (sociosUnidade.length === 0) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+        <div className="text-center">
+          <Users className="mx-auto text-gray-400 mb-4" size={64} />
+          <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
+            Nenhum sócio cadastrado
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400">
+            É necessário cadastrar sócios para {unidadeSelecionada} antes de distribuir lucros
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header com informações da unidade */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+              💰 Distribuição de Lucros - {unidadeSelecionada}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Distribua os lucros entre os sócios conforme seus percentuais de participação
+            </p>
+          </div>
+          
+          <Button
+            onClick={() => setShowModal(true)}
+            leftIcon={<Plus size={16} />}
+            disabled={totalPercentual !== 100}
+          >
+            Nova Distribuição
+          </Button>
+        </div>
+
+        {/* Informações financeiras */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              R$ {lucroUnidade.toFixed(2)}
+            </div>
+            <div className="text-sm text-green-800 dark:text-green-300">
+              Lucro da Unidade (mês atual)
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {sociosUnidade.length}
+            </div>
+            <div className="text-sm text-blue-800 dark:text-blue-300">
+              Sócios Cadastrados
+            </div>
+          </div>
+          
+          <div className={`p-4 rounded-lg border ${
+            totalPercentual === 100
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+          }`}>
+            <div className={`text-2xl font-bold ${
+              totalPercentual === 100
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-600 dark:text-red-400'
+            }`}>
+              {totalPercentual}%
+            </div>
+            <div className={`text-sm ${
+              totalPercentual === 100
+                ? 'text-green-800 dark:text-green-300'
+                : 'text-red-800 dark:text-red-300'
+            }`}>
+              Total Percentuais
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista de sócios com percentuais */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+          👥 Sócios e Participações
+        </h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sociosUnidade.map(socio => (
+            <div key={socio.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h5 className="font-medium text-gray-800 dark:text-gray-100">
+                    {socio.nome}
+                  </h5>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    CPF: {socio.cpf}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                    {socio.percentual}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Histórico de distribuições */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+          📊 Histórico de Distribuições
+        </h4>
+        
+        {distribuicoesRealizadas.length === 0 ? (
+          <div className="text-center py-8">
+            <BarChart className="mx-auto text-gray-400 mb-4" size={48} />
+            <p className="text-gray-500 dark:text-gray-400">
+              Nenhuma distribuição realizada ainda
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {distribuicoesRealizadas.map(dist => (
+              <div key={dist.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h5 className="font-medium text-gray-800 dark:text-gray-100">
+                      {dist.descricao}
+                    </h5>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(dist.data).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <div className="text-xl font-bold text-green-600 dark:text-green-400">
+                    R$ {dist.valorTotal.toFixed(2)}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {dist.distribuicao.map(item => (
+                    <div key={item.socioId} className="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{item.nome}</span>
+                        <span className="text-sm text-green-600 dark:text-green-400">
+                          R$ {item.valor.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.percentual}%
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modal de Nova Distribuição */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Nova Distribuição de Lucros"
+        size="lg"
+      >
+        <div className="space-y-6">
+          {/* Prévia da distribuição */}
+          {valorDistribuir && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-3">
+                💡 Prévia da Distribuição
+              </h4>
+              <div className="space-y-2">
+                {calcularDistribuicao(valorDistribuir).map(item => (
+                  <div key={item.socioId} className="flex justify-between items-center text-sm">
+                    <span>{item.nome} ({item.percentual}%)</span>
+                    <span className="font-medium text-blue-600 dark:text-blue-400">
+                      R$ {item.valor.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Input
+            label="Valor Total a Distribuir (R$)"
+            type="number"
+            required
+            value={valorDistribuir}
+            onChange={(e) => setValorDistribuir(e.target.value)}
+            placeholder="Ex: 5000.00"
+            min="0"
+            step="0.01"
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Descrição (Opcional)
+            </label>
+            <textarea
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              placeholder="Ex: Distribuição de lucros referente ao mês de julho/2025"
+              rows={3}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDistribuir}
+              loading={loading}
+              leftIcon={<DollarSign size={16} />}
+            >
+              Distribuir Lucros
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+});
+
 // Página de Financeiro
 const FinanceiroPage = memo(() => {
   const { 
@@ -6835,6 +7229,11 @@ const FinanceiroPage = memo(() => {
           itemsPerPage={15}
         />
       </div>
+
+      {/* 🆕 NOVO: Distribuição de Lucros para Admins */}
+      {tipoUsuario === 'admin' && (
+        <DistribuicaoLucros unidadeSelecionada={unidadeSelecionada} />
+      )}
     </div>
   );
 });
