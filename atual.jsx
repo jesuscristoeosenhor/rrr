@@ -494,11 +494,34 @@ const AppStateProvider = ({ children }) => {
   const [presencas, setPresencas] = useLocalStorage('presencas', mockData.presencas);
   const [horariosConfiguracao, setHorariosConfiguracao] = useLocalStorage('horariosConfiguracao', mockData.horariosConfiguracao);
 
+  // 🆕 NOVOS ESTADOS PARA SISTEMA DE SÓCIOS E FINANCEIRO POR UNIDADE
+  const [unidadeSelecionada, setUnidadeSelecionada] = useLocalStorage('unidade-selecionada', '');
+  const [sociosPorUnidade, setSociosPorUnidade] = useLocalStorage('socios-por-unidade', {
+    "CT Copacabana": [
+      { id: 1, nome: "João Silva", cpf: "123.456.789-00", percentual: 60, telefone: "11999999999" },
+      { id: 2, nome: "Maria Santos", cpf: "987.654.321-00", percentual: 40, telefone: "11888888888" }
+    ],
+    "CT Ipanema": [],
+  });
+  const [financeirosPorUnidade, setFinanceirosPorUnidade] = useLocalStorage('financeiros-por-unidade', {
+    "CT Copacabana": {
+      receitas: [],
+      despesas: [],
+      distribuicoes: []
+    },
+    "CT Ipanema": {
+      receitas: [],
+      despesas: [],
+      distribuicoes: []
+    }
+  });
+
   // Estados de sessão
   const [userLogado, setUserLogado] = useState(null);
   const [tipoUsuario, setTipoUsuario] = useState('admin');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(false); // 🔧 CORREÇÃO: Adicionar variável loading que estava faltando
 
   const value = useMemo(() => ({
     alunos, setAlunos,
@@ -515,7 +538,12 @@ const AppStateProvider = ({ children }) => {
     tipoUsuario, setTipoUsuario,
     activeTab, setActiveTab,
     alugueis, setAlugueis, 
-    cart, setCart
+    cart, setCart,
+    // 🆕 NOVOS ESTADOS PARA SISTEMA DE SÓCIOS E FINANCEIRO POR UNIDADE
+    unidadeSelecionada, setUnidadeSelecionada,
+    sociosPorUnidade, setSociosPorUnidade,
+    financeirosPorUnidade, setFinanceirosPorUnidade,
+    loading, setLoading
   }), [
     alunos, setAlunos,
     professores, setProfessores,
@@ -531,7 +559,12 @@ const AppStateProvider = ({ children }) => {
     tipoUsuario, setTipoUsuario,
     activeTab, setActiveTab,
     alugueis, setAlugueis, 
-    cart, setCart
+    cart, setCart,
+    // 🆕 NOVOS ESTADOS PARA SISTEMA DE SÓCIOS E FINANCEIRO POR UNIDADE
+    unidadeSelecionada, setUnidadeSelecionada,
+    sociosPorUnidade, setSociosPorUnidade,
+    financeirosPorUnidade, setFinanceirosPorUnidade,
+    loading, setLoading
   ]);
 
   return (
@@ -788,6 +821,57 @@ class ErrorBoundary extends React.Component {
 // ===============================
 // COMPONENTES DE UI MELHORADOS
 // ===============================
+
+// 🆕 SELETOR DE UNIDADE - NOVO COMPONENTE
+const SeletorUnidade = memo(({ unidadeSelecionada, onUnidadeChange, unidades }) => {
+  const { isDarkMode } = useTheme();
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+            <Building className="text-blue-600 dark:text-blue-400" size={20} />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+              🏢 Selecionar Unidade
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Escolha a unidade para visualizar seus sócios e dados financeiros
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex-1 max-w-sm">
+          <select
+            value={unidadeSelecionada}
+            onChange={(e) => onUnidadeChange(e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+              isDarkMode 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
+            style={{ minHeight: '44px' }}
+          >
+            <option value="">✨ Selecione uma unidade</option>
+            {unidades.map(unidade => (
+              <option key={unidade.id} value={unidade.nome}>
+                🏢 {unidade.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        {unidadeSelecionada && (
+          <div className="bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 px-3 py-2 rounded-lg text-sm font-medium">
+            ✅ {unidadeSelecionada}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
 
 // Loading Spinner melhorado
 const LoadingSpinner = memo(({ size = 'md', text = 'Carregando...' }) => {
@@ -1688,7 +1772,7 @@ const MenuSidebar = memo(({ isMobileOpen, setMobileOpen, isCollapsed }) => {
  
   
   const { isDarkMode } = useTheme();
-  const { activeTab, setActiveTab, tipoUsuario, userLogado, setUserLogado, setTipoUsuario } = useAppState();
+  const { activeTab, setActiveTab, tipoUsuario, userLogado, setUserLogado, setTipoUsuario, sociosPorUnidade } = useAppState();
   const { addNotification } = useNotifications();
   // 🆕 ADICIONAR: Hook para acessar as metas
   const [configs] = useLocalStorage('configuracoes-ct-usuario', {
@@ -1864,8 +1948,14 @@ if (tipoUsuario === 'admin' || tipoUsuario === 'professor') {
 
     if (tipoUsuario === 'admin') {
       financeiroItems.push(
-        
-        
+        // 🆕 NOVO ITEM: Gestão de Sócios por Unidade
+        { 
+          id: 'socios', 
+          label: '👥 Sócios por Unidade', 
+          icon: Users, 
+          roles: ['admin'],
+          badge: { count: Object.keys(sociosPorUnidade || {}).length, color: 'blue' }
+        }
       );
     }
 
@@ -5942,9 +6032,483 @@ const vagas = isSemLimite ? Infinity : (horario.maxAlunos - agendamentos.length)
     </div>
   );
 });
+
+// 🆕 COMPONENTE DE GESTÃO DE SÓCIOS POR UNIDADE (NOVO)
+const SociosManager = memo(({ unidadeSelecionada }) => {
+  const { sociosPorUnidade, setSociosPorUnidade } = useAppState();
+  const { addNotification } = useNotifications();
+  const { isDarkMode } = useTheme();
+  
+  const [showModal, setShowModal] = useState(false);
+  const [editingSocio, setEditingSocio] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Sócios da unidade selecionada
+  const sociosUnidade = useMemo(() => {
+    if (!unidadeSelecionada) return [];
+    return sociosPorUnidade[unidadeSelecionada] || [];
+  }, [sociosPorUnidade, unidadeSelecionada]);
+
+  // Validar se percentuais somam 100%
+  const totalPercentual = useMemo(() => {
+    return sociosUnidade.reduce((total, socio) => total + (socio.percentual || 0), 0);
+  }, [sociosUnidade]);
+
+  const handleSaveSocio = useCallback((socioData) => {
+    if (!unidadeSelecionada) {
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Selecione uma unidade primeiro'
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      setSociosPorUnidade(prev => {
+        const newSocios = { ...prev };
+        
+        if (!newSocios[unidadeSelecionada]) {
+          newSocios[unidadeSelecionada] = [];
+        }
+
+        if (editingSocio) {
+          // Editando sócio existente
+          newSocios[unidadeSelecionada] = newSocios[unidadeSelecionada].map(s => 
+            s.id === editingSocio.id ? { ...s, ...socioData } : s
+          );
+        } else {
+          // Novo sócio
+          const novoSocio = {
+            id: Date.now(),
+            ...socioData
+          };
+          newSocios[unidadeSelecionada] = [...newSocios[unidadeSelecionada], novoSocio];
+        }
+
+        return newSocios;
+      });
+
+      addNotification({
+        type: 'success',
+        title: editingSocio ? 'Sócio atualizado' : 'Sócio adicionado',
+        message: `${socioData.nome} foi ${editingSocio ? 'atualizado' : 'adicionado'} com sucesso`
+      });
+
+      setShowModal(false);
+      setEditingSocio(null);
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao salvar sócio'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [unidadeSelecionada, editingSocio, setSociosPorUnidade, addNotification]);
+
+  const handleDeleteSocio = useCallback((socioId) => {
+    const socio = sociosUnidade.find(s => s.id === socioId);
+    if (window.confirm(`Confirma a exclusão do sócio ${socio?.nome}?`)) {
+      setSociosPorUnidade(prev => {
+        const newSocios = { ...prev };
+        newSocios[unidadeSelecionada] = newSocios[unidadeSelecionada].filter(s => s.id !== socioId);
+        return newSocios;
+      });
+
+      addNotification({
+        type: 'success',
+        title: 'Sócio removido',
+        message: `${socio?.nome} foi removido da unidade`
+      });
+    }
+  }, [sociosUnidade, unidadeSelecionada, setSociosPorUnidade, addNotification]);
+
+  if (!unidadeSelecionada) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+        <div className="text-center">
+          <Users className="mx-auto text-gray-400 mb-4" size={64} />
+          <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
+            🏢 Selecione uma Unidade
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400">
+            Escolha uma unidade para gerenciar seus sócios e percentuais de participação
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+              👥 Sócios - {unidadeSelecionada}
+              <span className="text-sm bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full">
+                {sociosUnidade.length} sócios
+              </span>
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Gerencie os sócios e seus percentuais de participação nesta unidade
+            </p>
+          </div>
+          
+          <Button
+            onClick={() => {
+              setEditingSocio(null);
+              setShowModal(true);
+            }}
+            leftIcon={<Plus size={16} />}
+          >
+            Adicionar Sócio
+          </Button>
+        </div>
+
+        {/* Validação de percentuais */}
+        <div className={`mt-4 p-4 rounded-lg ${
+          totalPercentual === 100 
+            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
+            : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {totalPercentual === 100 ? (
+                <CheckCircle className="text-green-600 dark:text-green-400" size={20} />
+              ) : (
+                <AlertCircle className="text-red-600 dark:text-red-400" size={20} />
+              )}
+              <span className={`font-medium ${
+                totalPercentual === 100 
+                  ? 'text-green-800 dark:text-green-200' 
+                  : 'text-red-800 dark:text-red-200'
+              }`}>
+                Percentual Total: {totalPercentual}%
+              </span>
+            </div>
+            <span className={`text-sm ${
+              totalPercentual === 100 
+                ? 'text-green-600 dark:text-green-400' 
+                : 'text-red-600 dark:text-red-400'
+            }`}>
+              {totalPercentual === 100 ? '✅ Válido' : `❌ Faltam ${100 - totalPercentual}%`}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista de Sócios */}
+      {sociosUnidade.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+          <div className="text-center">
+            <Users className="mx-auto text-gray-400 mb-4" size={64} />
+            <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
+              Nenhum sócio cadastrado
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              Adicione o primeiro sócio para {unidadeSelecionada}
+            </p>
+            <Button
+              onClick={() => {
+                setEditingSocio(null);
+                setShowModal(true);
+              }}
+              leftIcon={<Plus size={16} />}
+            >
+              Adicionar Primeiro Sócio
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sociosUnidade.map(socio => (
+            <div 
+              key={socio.id}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                    <User className="text-blue-600 dark:text-blue-400" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-100">
+                      {socio.nome}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      CPF: {socio.cpf}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {socio.percentual}%
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Participação
+                  </div>
+                </div>
+              </div>
+
+              {socio.telefone && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  <Phone size={14} />
+                  <span>{socio.telefone}</span>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setEditingSocio(socio);
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  title="Editar sócio"
+                >
+                  <Edit size={16} />
+                </button>
+                <button
+                  onClick={() => handleDeleteSocio(socio.id)}
+                  className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                  title="Remover sócio"
+                >
+                  <Trash size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal de Sócio */}
+      <SocioModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEditingSocio(null);
+        }}
+        onSave={handleSaveSocio}
+        socio={editingSocio}
+        sociosExistentes={sociosUnidade}
+        loading={loading}
+      />
+    </div>
+  );
+});
+
+// 🆕 MODAL DE SÓCIO (NOVO)
+const SocioModal = memo(({ isOpen, onClose, onSave, socio, sociosExistentes, loading }) => {
+  const [formData, setFormData] = useState({
+    nome: '',
+    cpf: '',
+    telefone: '',
+    percentual: ''
+  });
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (socio) {
+      setFormData({
+        nome: socio.nome || '',
+        cpf: socio.cpf || '',
+        telefone: socio.telefone || '',
+        percentual: socio.percentual || ''
+      });
+    } else {
+      setFormData({
+        nome: '',
+        cpf: '',
+        telefone: '',
+        percentual: ''
+      });
+    }
+    setErrors({});
+  }, [socio, isOpen]);
+
+  const validateForm = useCallback(() => {
+    const newErrors = {};
+    
+    if (!formData.nome.trim()) {
+      newErrors.nome = 'Nome é obrigatório';
+    }
+    
+    if (!formData.cpf.trim()) {
+      newErrors.cpf = 'CPF é obrigatório';
+    } else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf)) {
+      newErrors.cpf = 'CPF deve ter o formato 000.000.000-00';
+    }
+    
+    if (!formData.percentual || formData.percentual <= 0 || formData.percentual > 100) {
+      newErrors.percentual = 'Percentual deve ser entre 1 e 100';
+    }
+
+    // Verificar se o total não ultrapassa 100%
+    const percentualAtual = parseFloat(formData.percentual) || 0;
+    const totalOutros = sociosExistentes
+      .filter(s => !socio || s.id !== socio.id)
+      .reduce((total, s) => total + s.percentual, 0);
+    
+    if (totalOutros + percentualAtual > 100) {
+      newErrors.percentual = `Percentual excede o limite. Máximo disponível: ${100 - totalOutros}%`;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData, sociosExistentes, socio]);
+
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSave({
+        ...formData,
+        percentual: parseFloat(formData.percentual)
+      });
+    }
+  }, [formData, validateForm, onSave]);
+
+  const formatCPF = useCallback((value) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  }, []);
+
+  const formatPhone = useCallback((value) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3');
+  }, []);
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${socio ? 'Editar' : 'Novo'} Sócio`}
+      size="md"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Nome Completo"
+          required
+          value={formData.nome}
+          onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+          error={errors.nome}
+          placeholder="Ex: João Silva Santos"
+        />
+
+        <Input
+          label="CPF"
+          required
+          value={formData.cpf}
+          onChange={(e) => {
+            const formatted = formatCPF(e.target.value);
+            if (formatted.length <= 14) {
+              setFormData(prev => ({ ...prev, cpf: formatted }));
+            }
+          }}
+          error={errors.cpf}
+          placeholder="000.000.000-00"
+          maxLength={14}
+        />
+
+        <Input
+          label="Telefone"
+          value={formData.telefone}
+          onChange={(e) => {
+            const formatted = formatPhone(e.target.value);
+            if (formatted.length <= 15) {
+              setFormData(prev => ({ ...prev, telefone: formatted }));
+            }
+          }}
+          error={errors.telefone}
+          placeholder="(11) 99999-9999"
+          maxLength={15}
+        />
+
+        <Input
+          label="Percentual de Participação (%)"
+          type="number"
+          required
+          value={formData.percentual}
+          onChange={(e) => setFormData(prev => ({ ...prev, percentual: e.target.value }))}
+          error={errors.percentual}
+          placeholder="Ex: 50"
+          min="1"
+          max="100"
+          step="0.01"
+        />
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            loading={loading}
+            leftIcon={<Save size={16} />}
+          >
+            {socio ? 'Atualizar' : 'Adicionar'} Sócio
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+});
+
+// 🆕 PÁGINA DE GESTÃO DE SÓCIOS POR UNIDADE (NOVA)
+const SociosPage = memo(() => {
+  const { unidades, unidadeSelecionada, setUnidadeSelecionada } = useAppState();
+
+  const handleUnidadeChange = useCallback((novaUnidade) => {
+    setUnidadeSelecionada(novaUnidade);
+  }, [setUnidadeSelecionada]);
+
+  return (
+    <div className="p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+                👥 Gestão de Sócios por Unidade
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Gerencie os sócios e suas participações em cada unidade do seu CT
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Seletor de Unidade */}
+        <SeletorUnidade 
+          unidadeSelecionada={unidadeSelecionada}
+          onUnidadeChange={handleUnidadeChange}
+          unidades={unidades}
+        />
+
+        {/* Gestão de Sócios */}
+        <SociosManager unidadeSelecionada={unidadeSelecionada} />
+      </div>
+    </div>
+  );
+});
+
 // Página de Financeiro
 const FinanceiroPage = memo(() => {
-  const { financeiro, setFinanceiro, tipoUsuario, userLogado, planos } = useAppState();
+  const { 
+    financeiro, setFinanceiro, tipoUsuario, userLogado, planos, 
+    unidades, unidadeSelecionada, setUnidadeSelecionada 
+  } = useAppState();
   const { addNotification } = useNotifications();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -5953,16 +6517,37 @@ const FinanceiroPage = memo(() => {
   const [editingTransacao, setEditingTransacao] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Filtrar dados baseado no tipo de usuário
+  // Handler para mudança de unidade
+  const handleUnidadeChange = useCallback((novaUnidade) => {
+    setUnidadeSelecionada(novaUnidade);
+  }, [setUnidadeSelecionada]);
+
+  // Filtrar dados baseado no tipo de usuário e unidade selecionada (se admin)
   const dadosFinanceiros = useMemo(() => {
+    let dados = financeiro;
+
+    // Filtro por tipo de usuário
     if (tipoUsuario === 'aluno') {
-      return financeiro.filter(f => f.alunoId === userLogado?.id);
+      dados = dados.filter(f => f.alunoId === userLogado?.id);
+    } else if (tipoUsuario === 'professor') {
+      dados = dados.filter(f => f.professorId === userLogado?.id);
     }
-    if (tipoUsuario === 'professor') {
-      return financeiro.filter(f => f.professorId === userLogado?.id);
+
+    // 🆕 NOVO: Filtro por unidade para admins
+    if (tipoUsuario === 'admin' && unidadeSelecionada) {
+      // Filtrar transações da unidade selecionada
+      // Assumindo que as transações têm um campo 'unidade' ou pode ser identificado pelo aluno
+      dados = dados.filter(f => {
+        if (f.unidade) {
+          return f.unidade === unidadeSelecionada;
+        }
+        // Se não tem campo unidade, pode filtrar pelo aluno (se aplicável)
+        return true; // Por enquanto, mostrar todos se não tem unidade específica
+      });
     }
-    return financeiro;
-  }, [financeiro, tipoUsuario, userLogado]);
+
+    return dados;
+  }, [financeiro, tipoUsuario, userLogado, unidadeSelecionada]);
 
   const filteredTransacoes = useAdvancedFilter(dadosFinanceiros, { 
     ...filters,
@@ -6181,6 +6766,15 @@ const FinanceiroPage = memo(() => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* 🆕 NOVO: Seletor de Unidade para Admins */}
+      {tipoUsuario === 'admin' && (
+        <SeletorUnidade 
+          unidadeSelecionada={unidadeSelecionada}
+          onUnidadeChange={handleUnidadeChange}
+          unidades={unidades}
+        />
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <SearchBar
           searchTerm={searchTerm}
@@ -12849,7 +13443,9 @@ const renderContent = useCallback(() => {
     case 'metas':
       return <MetasPage />;
     case 'financeiro':
-      return <FinanceiroPage />;       
+      return <FinanceiroPage />;
+    case 'socios':
+      return <SociosPage />; // 🆕 NOVO: Página de gestão de sócios por unidade
     case 'loja':
       return <LojaPage />;
     case 'evolucao':
