@@ -2521,6 +2521,11 @@ const Dashboard = memo(() => {
   if (tipoUsuario === 'professor') {
     return <DashboardProfessor />;
   }
+  
+  // 🆕 Se o usuário for um gestor, renderiza o dashboard dele
+  if (tipoUsuario === 'gestor') {
+    return <DashboardGestor />;
+  }
 
   // Se o usuário for um aluno, renderiza o dashboard dele
   if (tipoUsuario === 'aluno') {
@@ -3000,6 +3005,292 @@ const DashboardAluno = memo(() => {
     </div>
   );
 });
+
+// 🆕 Dashboard específico para Gestor
+const DashboardGestor = memo(() => {
+  const { userLogado, alunos, professores, financeiro, treinos, presencas, setActiveTab } = useAppState(); // 🆕 Adicionado setActiveTab
+  const { hasFullAccess, currentUnit, isGestor } = useUnitAccess();
+  const unitFilteredAlunos = useUnitFilteredData(alunos, 'alunos');
+  const unitFilteredProfessores = useUnitFilteredData(professores, 'professores');
+  const unitFilteredFinanceiro = useUnitFilteredData(financeiro, 'financeiro');
+  const [metas] = useLocalStorage('metas-ct', []);
+
+  // Estatísticas da unidade do gestor
+  const gestorStats = useMemo(() => {
+    const agora = new Date();
+    const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+    
+    // Estatísticas de alunos da unidade
+    const totalAlunos = unitFilteredAlunos.length;
+    const alunosAtivos = unitFilteredAlunos.filter(a => a.status === 'ativo').length;
+    const alunosPendentes = unitFilteredAlunos.filter(a => a.status === 'pendente').length;
+    const alunosVencidos = unitFilteredAlunos.filter(a => {
+      const vencimento = new Date(a.vencimento);
+      return vencimento < agora;
+    }).length;
+
+    // Estatísticas de professores da unidade
+    const totalProfessores = unitFilteredProfessores.length;
+    const professoresAtivos = unitFilteredProfessores.filter(p => p.ativo).length;
+
+    // Estatísticas financeiras da unidade (este mês)
+    const receitasMes = unitFilteredFinanceiro
+      .filter(f => f.tipo === 'receita' && new Date(f.data) >= inicioMes)
+      .reduce((acc, f) => acc + f.valor, 0);
+    
+    const despesasMes = unitFilteredFinanceiro
+      .filter(f => f.tipo === 'despesa' && new Date(f.data) >= inicioMes)
+      .reduce((acc, f) => acc + f.valor, 0);
+
+    const lucroMes = receitasMes - despesasMes;
+
+    // Presenças este mês (estimativa baseada nos alunos)
+    const presencasMes = presencas.filter(p => {
+      const dataPresenca = new Date(p.data);
+      return dataPresenca >= inicioMes && dataPresenca <= agora;
+    }).length;
+
+    return {
+      totalAlunos,
+      alunosAtivos,
+      alunosPendentes,
+      alunosVencidos,
+      totalProfessores,
+      professoresAtivos,
+      receitasMes,
+      despesasMes,
+      lucroMes,
+      presencasMes
+    };
+  }, [unitFilteredAlunos, unitFilteredProfessores, unitFilteredFinanceiro, presencas]);
+
+  // Metas específicas da unidade
+  const metasUnidade = useMemo(() => {
+    return metas.filter(meta => 
+      meta.escopo === 'unidade' && meta.unidadeSelecionada === currentUnit ||
+      meta.escopo === 'geral'
+    );
+  }, [metas, currentUnit]);
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header personalizado para gestor */}
+      <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-6 text-white">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">
+              Olá, {userLogado?.nome?.split(' ')[0]}! 👨‍💼
+            </h1>
+            <p className="text-orange-100">
+              Bem-vindo ao painel de gestão da unidade {currentUnit}
+            </p>
+            <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full text-sm bg-white/20">
+              <Building size={14} className="mr-1" />
+              Gestor da Unidade {currentUnit}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold">
+              {gestorStats.alunosAtivos}
+            </div>
+            <div className="text-orange-100 text-sm">
+              Alunos Ativos
+            </div>
+          </div>        
+        </div>
+      </div>
+
+      {/* Cards de estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Total de Alunos
+              </p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {gestorStats.totalAlunos}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {gestorStats.alunosAtivos} ativos • {gestorStats.alunosPendentes} pendentes
+              </p>
+            </div>
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+              <Users className="text-blue-600 dark:text-blue-400" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Professores
+              </p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {gestorStats.totalProfessores}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {gestorStats.professoresAtivos} ativos
+              </p>
+            </div>
+            <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
+              <User className="text-green-600 dark:text-green-400" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Receita do Mês
+              </p>
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                R$ {gestorStats.receitasMes.toFixed(0)}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Lucro: R$ {gestorStats.lucroMes.toFixed(0)}
+              </p>
+            </div>
+            <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+              <DollarSign className="text-purple-600 dark:text-purple-400" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Presenças do Mês
+              </p>
+              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {gestorStats.presencasMes}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Aulas realizadas
+              </p>
+            </div>
+            <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+              <Calendar className="text-orange-600 dark:text-orange-400" size={24} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Alertas importantes */}
+      {gestorStats.alunosVencidos > 0 && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-center">
+            <AlertCircle className="text-red-600 dark:text-red-400 mr-3" size={20} />
+            <div>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
+                Atenção! {gestorStats.alunosVencidos} aluno(s) com mensalidade vencida
+              </h3>
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                Acesse a seção de Alunos para gerenciar os vencimentos
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grid de ações rápidas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Ações rápidas */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+            🚀 Ações Rápidas
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setActiveTab('alunos')}
+              className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-left"
+            >
+              <Users size={20} className="mb-2" />
+              <div className="text-sm font-medium">Gerenciar Alunos</div>
+              <div className="text-xs opacity-75">{gestorStats.totalAlunos} alunos</div>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('professores')}
+              className="p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-left"
+            >
+              <User size={20} className="mb-2" />
+              <div className="text-sm font-medium">Professores</div>
+              <div className="text-xs opacity-75">{gestorStats.totalProfessores} professores</div>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('financeiro')}
+              className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-left"
+            >
+              <DollarSign size={20} className="mb-2" />
+              <div className="text-sm font-medium">Financeiro</div>
+              <div className="text-xs opacity-75">R$ {gestorStats.receitasMes.toFixed(0)} receita</div>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('presenca')}
+              className="p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors text-left"
+            >
+              <CheckCircle size={20} className="mb-2" />
+              <div className="text-sm font-medium">Presença</div>
+              <div className="text-xs opacity-75">{gestorStats.presencasMes} este mês</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Metas da unidade */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+            🎯 Metas da Unidade
+          </h3>
+          {metasUnidade.length === 0 ? (
+            <div className="text-center py-6">
+              <Target className="mx-auto text-gray-400 mb-2" size={32} />
+              <p className="text-gray-500 dark:text-gray-400">
+                Nenhuma meta definida para sua unidade
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {metasUnidade.slice(0, 3).map(meta => (
+                <div key={meta.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                        {meta.titulo}
+                      </h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        {meta.valorAtual}/{meta.valorMeta} • {meta.tipo}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                        {Math.round((meta.valorAtual / meta.valorMeta) * 100)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {metasUnidade.length > 3 && (
+                <button
+                  onClick={() => setActiveTab('metas')}
+                  className="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 py-2"
+                >
+                  Ver todas as {metasUnidade.length} metas →
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
 // Modal de Aluno Melhorado
 const AlunoModal = memo(({ isOpen, onClose, onSave, aluno, planos, loading }) => {
  const [formData, setFormData] = useState({
@@ -3774,6 +4065,10 @@ const ProfessoresPage = memo(() => {
   const { professores, setProfessores, presencas } = useAppState();
   const { addNotification } = useNotifications();
   
+  // 🆕 Controle de acesso por unidade
+  const { hasFullAccess, currentUnit, isGestor } = useUnitAccess();
+  const unitFilteredProfessores = useUnitFilteredData(professores, 'professores');
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({});
   const [showModal, setShowModal] = useState(false);
@@ -3783,12 +4078,12 @@ const ProfessoresPage = memo(() => {
   const [selectedProfessor, setSelectedProfessor] = useState(null);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
 
-  // 🆕 Calcular estatísticas de pagamento dos professores
+  // 🆕 Calcular estatísticas de pagamento dos professores (filtrado por unidade)
   const estatisticasPagamento = useMemo(() => {
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     
-    return professores.map(professor => {
+    return unitFilteredProfessores.map(professor => { // 🆕 Usar dados filtrados por unidade
       // Buscar presenças do professor neste mês
       const presencasMes = presencas.filter(p => {
         const dataPresenca = new Date(p.data);
@@ -3838,7 +4133,7 @@ const ProfessoresPage = memo(() => {
           totalAulas / Object.keys(aulasPorDia).length : 0
       };
     });
-  }, [professores, presencas]);
+  }, [unitFilteredProfessores, presencas]); // 🆕 Usar dados filtrados por unidade
 
   const filteredProfessores = useAdvancedFilter(estatisticasPagamento, { 
     ...filters,
@@ -4057,14 +4352,14 @@ const ProfessoresPage = memo(() => {
     exportToCSV(exportData, 'professores-pagamentos');
   }, [filteredProfessores]);
 
-  // 🆕 Estatísticas totais
+  // 🆕 Estatísticas totais (baseadas nos dados filtrados por unidade)
   const estatisticasTotais = useMemo(() => {
-    const totalProfessores = professores.length;
-    const professoresAtivos = professores.filter(p => p.ativo).length;
+    const totalProfessores = unitFilteredProfessores.length; // 🆕 Usar dados filtrados por unidade
+    const professoresAtivos = unitFilteredProfessores.filter(p => p.ativo).length; // 🆕 Usar dados filtrados por unidade
     const totalPagamentoMes = estatisticasPagamento.reduce((acc, p) => acc + p.totalPagamentoMes, 0);
     const totalAulasMes = estatisticasPagamento.reduce((acc, p) => acc + p.totalAulasMes, 0);
-    const professoresFixos = professores.filter(p => p.tipoPagamento === 'fixo').length;
-    const professoresVariaveis = professores.filter(p => p.tipoPagamento === 'variavel').length;
+    const professoresFixos = unitFilteredProfessores.filter(p => p.tipoPagamento === 'fixo').length; // 🆕 Usar dados filtrados por unidade
+    const professoresVariaveis = unitFilteredProfessores.filter(p => p.tipoPagamento === 'variavel').length; // 🆕 Usar dados filtrados por unidade
 
     return {
       totalProfessores,
@@ -4075,7 +4370,7 @@ const ProfessoresPage = memo(() => {
       professoresVariaveis,
       ticketMedio: totalAulasMes > 0 ? totalPagamentoMes / totalAulasMes : 0
     };
-  }, [professores, estatisticasPagamento]);
+  }, [unitFilteredProfessores, estatisticasPagamento]); // 🆕 Usar dados filtrados por unidade
 
   return (
     <div className="p-6 space-y-6">
@@ -4085,11 +4380,16 @@ const ProfessoresPage = memo(() => {
           <div>
             <h2 className="text-2xl font-bold mb-2">👨‍🏫 Gestão de Professores</h2>
             <p className="text-green-100">
-              Sistema completo de controle de professores e pagamentos
+              {isGestor 
+                ? `Gerencie os professores da unidade ${currentUnit}`
+                : hasFullAccess 
+                  ? 'Sistema completo de controle de professores e pagamentos'
+                  : 'Visualize os professores'
+              }
             </p>
             <div className="flex items-center gap-4 mt-3 text-sm">
               <span className="bg-white/20 px-3 py-1 rounded-full">
-                📊 {estatisticasTotais.totalProfessores} Professores
+                📊 {unitFilteredProfessores.length} {isGestor ? `Professores na ${currentUnit}` : 'Professores'}
               </span>
               <span className="bg-white/20 px-3 py-1 rounded-full">
                 💰 R$ {estatisticasTotais.totalPagamentoMes.toFixed(0)} este mês
