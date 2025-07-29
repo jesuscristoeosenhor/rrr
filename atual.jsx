@@ -669,6 +669,79 @@ const useNotifications = () => {
   return context;
 };
 
+// 🆕 Hook para controle de acesso baseado em unidade
+const useUnitAccess = () => {
+  const { userLogado, tipoUsuario } = useAppState();
+  
+  return useMemo(() => {
+    // Admin tem acesso a todas as unidades
+    if (tipoUsuario === 'admin') {
+      return {
+        hasFullAccess: true,
+        allowedUnits: ['Centro', 'Zona Sul', 'Zona Norte', 'Barra'],
+        currentUnit: null,
+        isGestor: false
+      };
+    }
+    
+    // Gestor só tem acesso à sua unidade
+    if (tipoUsuario === 'gestor' && userLogado?.unidadeResponsavel) {
+      return {
+        hasFullAccess: false,
+        allowedUnits: [userLogado.unidadeResponsavel],
+        currentUnit: userLogado.unidadeResponsavel,
+        isGestor: true
+      };
+    }
+    
+    // Outros usuários (professor, aluno) têm acesso limitado
+    return {
+      hasFullAccess: false,
+      allowedUnits: userLogado?.unidade ? [userLogado.unidade] : [],
+      currentUnit: userLogado?.unidade || null,
+      isGestor: false
+    };
+  }, [userLogado, tipoUsuario]);
+};
+
+// 🆕 Hook para filtrar dados por unidade automaticamente
+const useUnitFilteredData = (data, dataType = 'default') => {
+  const { hasFullAccess, currentUnit } = useUnitAccess();
+  
+  return useMemo(() => {
+    if (!data || !Array.isArray(data)) return [];
+    
+    // Admin vê todos os dados
+    if (hasFullAccess) {
+      return data;
+    }
+    
+    // Gestor e outros veem apenas dados da sua unidade
+    if (currentUnit) {
+      return data.filter(item => {
+        // Para diferentes tipos de dados, verificar o campo correto
+        switch (dataType) {
+          case 'alunos':
+            return item.unidade === currentUnit;
+          case 'professores':
+            return item.unidade === currentUnit || !item.unidade; // Professores podem não ter unidade específica
+          case 'planos':
+            return item.unidade === currentUnit;
+          case 'financeiro':
+            return item.unidade === currentUnit || !item.unidade; // Transações podem ser gerais
+          case 'presencas':
+            // Para presenças, verificar se o aluno pertence à unidade
+            return true; // Por enquanto, deixar passar - será refinado quando integrar com dados de alunos
+          default:
+            return item.unidade === currentUnit || !item.unidade;
+        }
+      });
+    }
+    
+    return data;
+  }, [data, hasFullAccess, currentUnit, dataType]);
+};
+
 // Hook para filtros avançados
 // Hook para filtros avançados - VERSÃO MELHORADA
 const useAdvancedFilter = (data, filters) => {
@@ -3344,6 +3417,10 @@ const AlunosPage = memo(() => {
   const { alunos, setAlunos, planos } = useAppState();
   const { addNotification } = useNotifications();
   
+  // 🆕 Controle de acesso por unidade
+  const { hasFullAccess, currentUnit, isGestor } = useUnitAccess();
+  const unitFilteredAlunos = useUnitFilteredData(alunos, 'alunos');
+  
   // Estados para filtros e busca
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({});
@@ -3351,8 +3428,8 @@ const AlunosPage = memo(() => {
   const [editingAluno, setEditingAluno] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Dados filtrados
-  const filteredAlunos = useAdvancedFilter(alunos, { 
+  // Dados filtrados (primeiro por unidade, depois por filtros)
+  const filteredAlunos = useAdvancedFilter(unitFilteredAlunos, { // 🆕 Usar dados filtrados por unidade
     ...filters,
     nome: searchTerm,
     email: searchTerm 
@@ -3518,9 +3595,16 @@ const columns = useMemo(() => [
     setLoading(true);
     try {
       if (editingAluno) {
-        // Editar
+        // Editar - gestor só pode editar alunos da sua unidade
+        const dadosAtualizados = { ...alunoData };
+        
+        // 🆕 Gestor não pode alterar a unidade do aluno
+        if (isGestor) {
+          dadosAtualizados.unidade = editingAluno.unidade;
+        }
+        
         setAlunos(prev => prev.map(a => 
-          a.id === editingAluno.id ? { ...a, ...alunoData } : a
+          a.id === editingAluno.id ? { ...a, ...dadosAtualizados } : a
         ));
         addNotification({
           type: 'success',
@@ -3532,6 +3616,8 @@ const columns = useMemo(() => [
         const novoAluno = {
           id: Date.now(),
           ...alunoData,
+          // 🆕 Gestor cria alunos automaticamente na sua unidade
+          unidade: isGestor ? currentUnit : (alunoData.unidade || 'Centro'),
           status: 'ativo',
           vencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           senha: '123456',
@@ -3541,7 +3627,7 @@ const columns = useMemo(() => [
         addNotification({
           type: 'success',
           title: 'Aluno cadastrado',
-          message: 'Novo aluno adicionado com sucesso'
+          message: `Novo aluno adicionado${isGestor ? ` na unidade ${currentUnit}` : ''} com sucesso`
         });
       }
       setShowModal(false);
@@ -3556,7 +3642,7 @@ const columns = useMemo(() => [
     } finally {
       setLoading(false);
     }
-  }, [editingAluno, setAlunos, addNotification]);
+  }, [editingAluno, setAlunos, addNotification, isGestor, currentUnit]); // 🆕 Adicionado dependências do controle de acesso
 
   const clearFilters = useCallback(() => {
     setFilters({});
@@ -3578,6 +3664,41 @@ const columns = useMemo(() => [
 
   return (
     <div className="p-6 space-y-6">
+      {/* 🆕 Header com título e informação da unidade */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              👥 Gerenciamento de Alunos
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {isGestor 
+                ? `Gerencie os alunos da unidade ${currentUnit}`
+                : hasFullAccess 
+                  ? 'Gerencie todos os alunos do sistema'
+                  : 'Visualize os alunos'
+              }
+            </p>
+            {isGestor && (
+              <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300">
+                <Building size={14} className="mr-1" />
+                Unidade: {currentUnit}
+              </div>
+            )}
+          </div>
+          <Button
+            onClick={() => {
+              setEditingAluno(null);
+              setShowModal(true);
+            }}
+            leftIcon={<Plus size={20} />}
+            aria-label="Adicionar novo aluno"
+          >
+            Novo Aluno
+          </Button>
+        </div>
+      </div>
+
       {/* Header com busca e ações */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
        <SearchBar
@@ -3588,36 +3709,27 @@ const columns = useMemo(() => [
   onFiltersChange={setFilters}
   clearFilters={clearFilters}
   exportData={exportData}
-  alunos={alunos} // 🆕 Passar alunos para o componente
+  alunos={unitFilteredAlunos} // 🆕 Passar alunos filtrados por unidade
 />
-        
-        <Button
-          onClick={() => {
-            setEditingAluno(null);
-            setShowModal(true);
-          }}
-          leftIcon={<Plus size={20} />}
-          aria-label="Adicionar novo aluno"
-        >
-          Novo Aluno
-        </Button>
       </div>
 
-      {/* Estatísticas rápidas */}
+      {/* Estatísticas rápidas - baseadas nos dados filtrados por unidade */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
-          <div className="text-2xl font-bold text-blue-600">{alunos.length}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Total de Alunos</div>
+          <div className="text-2xl font-bold text-blue-600">{unitFilteredAlunos.length}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {isGestor ? `Alunos na ${currentUnit}` : 'Total de Alunos'}
+          </div>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
           <div className="text-2xl font-bold text-green-600">
-            {alunos.filter(a => a.status === 'ativo').length}
+            {unitFilteredAlunos.filter(a => a.status === 'ativo').length}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">Ativos</div>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
           <div className="text-2xl font-bold text-red-600">
-            {alunos.filter(a => a.status === 'pendente').length}
+            {unitFilteredAlunos.filter(a => a.status === 'pendente').length}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">Pendentes</div>
         </div>
@@ -4248,6 +4360,556 @@ const ProfessoresPage = memo(() => {
         presencas={presencas}
       />
     </div>
+  );
+});
+
+// 🆕 Página de Gestores - Nova funcionalidade para gerenciar gestores das unidades
+const GestoresPage = memo(() => {
+  const { gestores, setGestores, unidades } = useAppState();
+  const { addNotification } = useNotifications();
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({});
+  const [showModal, setShowModal] = useState(false);
+  const [editingGestor, setEditingGestor] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Dados filtrados
+  const filteredGestores = useMemo(() => {
+    return gestores.filter(gestor => {
+      const searchMatch = !searchTerm || 
+        gestor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        gestor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        gestor.unidadeResponsavel.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const unidadeMatch = !filters.unidade || gestor.unidadeResponsavel === filters.unidade;
+      const statusMatch = filters.status === undefined || 
+        (filters.status === 'ativo' ? gestor.ativo : !gestor.ativo);
+      
+      return searchMatch && unidadeMatch && statusMatch;
+    });
+  }, [gestores, searchTerm, filters]);
+
+  // Colunas da tabela
+  const columns = useMemo(() => [
+    {
+      key: 'nome',
+      label: 'Gestor',
+      render: (gestor) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            {gestor.nome}
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            {gestor.email}
+          </div>
+          <div className="text-xs text-orange-600 dark:text-orange-400 flex items-center mt-1">
+            <Building size={12} className="mr-1" />
+            Gestor da {gestor.unidadeResponsavel}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'unidade',
+      label: 'Unidade Responsável',
+      render: (gestor) => (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300">
+          <Building size={12} className="mr-1" />
+          {gestor.unidadeResponsavel}
+        </span>
+      )
+    },
+    {
+      key: 'contato',
+      label: 'Contato',
+      render: (gestor) => (
+        <div>
+          <div className="text-sm text-gray-900 dark:text-gray-100">
+            📞 {gestor.telefone}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            Admissão: {new Date(gestor.dataAdmissao).toLocaleDateString('pt-BR')}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (gestor) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          gestor.ativo 
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+        }`}>
+          {gestor.ativo ? '✅ Ativo' : '❌ Inativo'}
+        </span>
+      )
+    },
+    {
+      key: 'acoes',
+      label: 'Ações',
+      render: (gestor) => (
+        <div className="flex space-x-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => handleEdit(gestor)}
+            leftIcon={<Edit size={16} />}
+          >
+            Editar
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => handleToggleStatus(gestor)}
+            className={gestor.ativo ? 'text-red-600' : 'text-green-600'}
+          >
+            {gestor.ativo ? '❌ Desativar' : '✅ Ativar'}
+          </Button>
+        </div>
+      )
+    }
+  ], []);
+
+  const handleEdit = useCallback((gestor) => {
+    setEditingGestor(gestor);
+    setShowModal(true);
+  }, []);
+
+  const handleToggleStatus = useCallback((gestor) => {
+    const action = gestor.ativo ? 'desativar' : 'ativar';
+    if (window.confirm(`Tem certeza que deseja ${action} o gestor ${gestor.nome}?`)) {
+      setGestores(prev => prev.map(g => 
+        g.id === gestor.id ? { ...g, ativo: !g.ativo } : g
+      ));
+      addNotification({
+        type: 'success',
+        title: 'Status alterado',
+        message: `Gestor ${gestor.ativo ? 'desativado' : 'ativado'} com sucesso`
+      });
+    }
+  }, [setGestores, addNotification]);
+
+  const handleSave = useCallback(async (gestorData) => {
+    setLoading(true);
+    try {
+      if (editingGestor) {
+        // Editar
+        setGestores(prev => prev.map(g => 
+          g.id === editingGestor.id ? { ...g, ...gestorData } : g
+        ));
+        addNotification({
+          type: 'success',
+          title: 'Gestor atualizado',
+          message: 'Dados do gestor atualizados com sucesso'
+        });
+      } else {
+        // Criar novo
+        const novoGestor = {
+          id: Date.now(),
+          ...gestorData,
+          ativo: true,
+          dataAdmissao: new Date().toISOString().split('T')[0]
+        };
+        setGestores(prev => [...prev, novoGestor]);
+        addNotification({
+          type: 'success',
+          title: 'Gestor cadastrado',
+          message: 'Novo gestor adicionado com sucesso'
+        });
+      }
+      setShowModal(false);
+      setEditingGestor(null);
+    } catch (error) {
+      console.error('Erro ao salvar gestor:', error);
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao salvar dados do gestor'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [editingGestor, setGestores, addNotification]);
+
+  const clearFilters = useCallback(() => {
+    setFilters({});
+    setSearchTerm('');
+  }, []);
+
+  const exportData = useCallback(() => {
+    const exportData = filteredGestores.map(gestor => ({
+      Nome: gestor.nome,
+      Email: gestor.email,
+      Telefone: gestor.telefone,
+      'Unidade Responsável': gestor.unidadeResponsavel,
+      'Data Admissão': new Date(gestor.dataAdmissao).toLocaleDateString('pt-BR'),
+      Status: gestor.ativo ? 'Ativo' : 'Inativo'
+    }));
+    
+    const headers = Object.keys(exportData[0] || {});
+    const csvContent = [
+      headers.join(','),
+      ...exportData.map(row => headers.map(h => row[h]).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'gestores.csv';
+    link.click();
+  }, [filteredGestores]);
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            👨‍💼 Gestores das Unidades
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Gerencie os gestores responsáveis por cada unidade
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            setEditingGestor(null);
+            setShowModal(true);
+          }}
+          leftIcon={<Plus size={20} />}
+        >
+          Novo Gestor
+        </Button>
+      </div>
+
+      {/* Filtros e Busca */}
+      <div className="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <input
+              type="text"
+              placeholder="🔍 Buscar por nome, email ou unidade..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          <div>
+            <select
+              value={filters.unidade || ''}
+              onChange={(e) => setFilters(prev => ({ ...prev, unidade: e.target.value || undefined }))}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">Todas as unidades</option>
+              <option value="Centro">Centro</option>
+              <option value="Zona Sul">Zona Sul</option>
+              <option value="Zona Norte">Zona Norte</option>
+              <option value="Barra">Barra</option>
+            </select>
+          </div>
+          <div>
+            <select
+              value={filters.status || ''}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value || undefined }))}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">Todos os status</option>
+              <option value="ativo">Apenas Ativos</option>
+              <option value="inativo">Apenas Inativos</option>
+            </select>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="secondary" onClick={clearFilters} className="flex-1">
+              Limpar
+            </Button>
+            <Button variant="secondary" onClick={exportData} className="flex-1">
+              Exportar
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            {gestores.length}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Total de Gestores
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            {gestores.filter(g => g.ativo).length}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Gestores Ativos
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+            {gestores.filter(g => !g.ativo).length}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Gestores Inativos
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            {new Set(gestores.map(g => g.unidadeResponsavel)).size}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Unidades com Gestor
+          </div>
+        </div>
+      </div>
+
+      {/* Tabela de Gestores */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <EnhancedTable
+          data={filteredGestores}
+          columns={columns}
+          loading={false}
+          emptyMessage="Nenhum gestor encontrado"
+        />
+      </div>
+
+      {/* Modal de Gestor */}
+      <GestorModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEditingGestor(null);
+        }}
+        onSave={handleSave}
+        gestor={editingGestor}
+        loading={loading}
+        unidades={['Centro', 'Zona Sul', 'Zona Norte', 'Barra']}
+      />
+    </div>
+  );
+});
+
+// 🆕 Modal de Gestor - Formulário para criar/editar gestores
+const GestorModal = memo(({ isOpen, onClose, onSave, gestor, loading, unidades }) => {
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    telefone: '',
+    unidadeResponsavel: '',
+    senha: '123456' // Senha padrão
+  });
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (gestor) {
+      setFormData({
+        nome: gestor.nome || '',
+        email: gestor.email || '',
+        telefone: gestor.telefone || '',
+        unidadeResponsavel: gestor.unidadeResponsavel || '',
+        senha: gestor.senha || '123456'
+      });
+    } else {
+      setFormData({
+        nome: '',
+        email: '',
+        telefone: '',
+        unidadeResponsavel: '',
+        senha: '123456'
+      });
+    }
+    setErrors({});
+  }, [gestor]);
+
+  const validateForm = useCallback(() => {
+    const newErrors = {};
+    
+    if (!formData.nome.trim()) {
+      newErrors.nome = 'Nome é obrigatório';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+    
+    if (!formData.telefone.trim()) {
+      newErrors.telefone = 'Telefone é obrigatório';
+    }
+    
+    if (!formData.unidadeResponsavel) {
+      newErrors.unidadeResponsavel = 'Selecione uma unidade';
+    }
+    
+    if (!formData.senha.trim()) {
+      newErrors.senha = 'Senha é obrigatória';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
+
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSave(formData);
+    }
+  }, [formData, validateForm, onSave]);
+
+  const handleChange = useCallback((field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  }, [errors]);
+
+  if (!isOpen) return null;
+
+  return (
+    <Modal onClose={onClose} size="md">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            {gestor ? '✏️ Editar Gestor' : '➕ Novo Gestor'}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Nome Completo *
+            </label>
+            <input
+              type="text"
+              value={formData.nome}
+              onChange={(e) => handleChange('nome', e.target.value)}
+              className={`w-full p-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                errors.nome 
+                  ? 'border-red-500 dark:border-red-400' 
+                  : 'border-gray-300 dark:border-gray-600'
+              }`}
+              placeholder="Digite o nome completo"
+            />
+            {errors.nome && (
+              <p className="text-red-500 text-sm mt-1">{errors.nome}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Email *
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              className={`w-full p-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                errors.email 
+                  ? 'border-red-500 dark:border-red-400' 
+                  : 'border-gray-300 dark:border-gray-600'
+              }`}
+              placeholder="gestor@boraporct.com"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Telefone *
+            </label>
+            <input
+              type="tel"
+              value={formData.telefone}
+              onChange={(e) => handleChange('telefone', e.target.value)}
+              className={`w-full p-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                errors.telefone 
+                  ? 'border-red-500 dark:border-red-400' 
+                  : 'border-gray-300 dark:border-gray-600'
+              }`}
+              placeholder="(21) 99999-9999"
+            />
+            {errors.telefone && (
+              <p className="text-red-500 text-sm mt-1">{errors.telefone}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Unidade Responsável *
+            </label>
+            <select
+              value={formData.unidadeResponsavel}
+              onChange={(e) => handleChange('unidadeResponsavel', e.target.value)}
+              className={`w-full p-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                errors.unidadeResponsavel 
+                  ? 'border-red-500 dark:border-red-400' 
+                  : 'border-gray-300 dark:border-gray-600'
+              }`}
+            >
+              <option value="">Selecione uma unidade</option>
+              {unidades.map(unidade => (
+                <option key={unidade} value={unidade}>
+                  {unidade}
+                </option>
+              ))}
+            </select>
+            {errors.unidadeResponsavel && (
+              <p className="text-red-500 text-sm mt-1">{errors.unidadeResponsavel}</p>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            Senha *
+          </label>
+          <input
+            type="password"
+            value={formData.senha}
+            onChange={(e) => handleChange('senha', e.target.value)}
+            className={`w-full p-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+              errors.senha 
+                ? 'border-red-500 dark:border-red-400' 
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
+            placeholder="Digite a senha"
+          />
+          {errors.senha && (
+            <p className="text-red-500 text-sm mt-1">{errors.senha}</p>
+          )}
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            A senha padrão é "123456", mas pode ser alterada aqui
+          </p>
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-600">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            loading={loading}
+            leftIcon={<Save size={16} />}
+          >
+            {gestor ? 'Atualizar' : 'Cadastrar'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 });
 
@@ -12908,6 +13570,8 @@ const renderContent = useCallback(() => {
       return <AlunosPage />;
     case 'professores':
       return <ProfessoresPage />;
+    case 'gestores': // 🆕 Nova página de gestores
+      return <GestoresPage />;
     case 'presenca':
       return <PresencaPage />; // ← Admin vê controle de presença
     case 'agendamentos':
