@@ -1,41 +1,8 @@
 import React, { useState, useCallback, memo } from 'react';
-import { AppStateProvider, useAppState } from '@/contexts/AppStateContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAppState } from '@/contexts/AppStateContext';
 
 // Placeholder components until we extract them
-const LoginModal = memo(() => {
-  const { setUserLogado } = useAppState();
-  
-  const handleLogin = () => {
-    // Simple mock login for now
-    setUserLogado({
-      id: '1',
-      nome: 'Admin',
-      email: 'admin@sistema.com',
-      senha: '', // Will be hashed
-      tipo: 'admin',
-      ativo: true,
-      criadoEm: new Date(),
-      atualizadoEm: new Date(),
-    });
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
-          Sistema de Futvolei
-        </h2>
-        <button
-          onClick={handleLogin}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
-        >
-          Entrar como Admin
-        </button>
-      </div>
-    </div>
-  );
-});
-
 const Dashboard = memo(() => (
   <div className="p-6">
     <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
@@ -63,7 +30,7 @@ const Dashboard = memo(() => (
 ));
 
 const Header = memo(({ toggleMobileSidebar }: { toggleMobileSidebar: () => void }) => {
-  const { userLogado, setUserLogado } = useAppState();
+  const { user, logout } = useAuth();
   
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
@@ -79,10 +46,10 @@ const Header = memo(({ toggleMobileSidebar }: { toggleMobileSidebar: () => void 
         
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-600 dark:text-gray-300">
-            Bem-vindo, {userLogado?.nome}
+            Bem-vindo, {user?.nome}
           </span>
           <button
-            onClick={() => setUserLogado(null)}
+            onClick={logout}
             className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
           >
             Sair
@@ -162,7 +129,7 @@ const MenuSidebar = memo(({
 const CTFutevoleiSystemInternal = memo(() => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed] = useState(false);
-  const { userLogado, activeTab } = useAppState();
+  const { activeTab } = useAppState();
 
   const renderContent = useCallback(() => {
     switch (activeTab) {
@@ -185,37 +152,27 @@ const CTFutevoleiSystemInternal = memo(() => {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-      {!userLogado ? (
-        <LoginModal />
-      ) : (
-        <>
-          <MenuSidebar 
-            isMobileOpen={isMobileSidebarOpen} 
-            setMobileOpen={setIsMobileSidebarOpen} 
-            isCollapsed={isSidebarCollapsed} 
-          />
-          
-          <div className={`transition-all duration-300 ${
-            isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-          } min-h-screen flex flex-col`}>
-            <Header 
-              toggleMobileSidebar={() => setIsMobileSidebarOpen(true)} 
-            />
-            
-            <main className="flex-grow p-3 sm:p-4 lg:p-6">
-              {renderContent()}
-            </main>
-          </div>
-        </>
-      )}
+      <MenuSidebar 
+        isMobileOpen={isMobileSidebarOpen} 
+        setMobileOpen={setIsMobileSidebarOpen} 
+        isCollapsed={isSidebarCollapsed} 
+      />
+      
+      <div className={`transition-all duration-300 ${
+        isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+      } min-h-screen flex flex-col`}>
+        <Header 
+          toggleMobileSidebar={() => setIsMobileSidebarOpen(true)} 
+        />
+        
+        <main className="flex-grow p-3 sm:p-4 lg:p-6">
+          {renderContent()}
+        </main>
+      </div>
     </div>
   );
 });
 
 export const CTFutevoleiSystem: React.FC = () => {
-  return (
-    <AppStateProvider>
-      <CTFutevoleiSystemInternal />
-    </AppStateProvider>
-  );
+  return <CTFutevoleiSystemInternal />;
 };
