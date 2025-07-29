@@ -443,6 +443,49 @@ alunos: [
     { id: 3, nome: 'Viseira Futevôlei', preco: 39.90, imagem: 'https://placehold.co/400x400/FF5733/FFFFFF?text=Viseira' },
     { id: 4, nome: 'Bola Mikasa FT-5', preco: 299.90, imagem: 'https://placehold.co/400x400/FFC300/000000?text=Bola' },
   ],
+  // 🆕 Gestores das unidades
+  gestores: [
+    { 
+      id: 1, 
+      nome: 'Roberto Silva', 
+      telefone: '(21) 97777-7777', 
+      email: 'roberto.centro@boraporct.com', 
+      senha: '123456',
+      unidadeResponsavel: 'Centro',
+      dataAdmissao: '2024-01-10',
+      ativo: true
+    },
+    { 
+      id: 2, 
+      nome: 'Marina Costa', 
+      telefone: '(21) 96666-6666', 
+      email: 'marina.zonasul@boraporct.com', 
+      senha: '123456',
+      unidadeResponsavel: 'Zona Sul',
+      dataAdmissao: '2024-02-15',
+      ativo: true
+    },
+    { 
+      id: 3, 
+      nome: 'Fernando Santos', 
+      telefone: '(21) 95555-5555', 
+      email: 'fernando.zonanorte@boraporct.com', 
+      senha: '123456',
+      unidadeResponsavel: 'Zona Norte',
+      dataAdmissao: '2024-03-20',
+      ativo: true
+    },
+    { 
+      id: 4, 
+      nome: 'Luciana Oliveira', 
+      telefone: '(21) 94444-4444', 
+      email: 'luciana.barra@boraporct.com', 
+      senha: '123456',
+      unidadeResponsavel: 'Barra',
+      dataAdmissao: '2024-04-01',
+      ativo: true
+    }
+  ],
   plataformas: [
     { id: 1, nome: 'Wellhub (Gympass)', valorPorAluno: 45.50, ativo: true },
     { id: 2, nome: 'TotalPass', valorPorAluno: 42.00, ativo: true },
@@ -485,6 +528,7 @@ const AppStateProvider = ({ children }) => {
   const [alunos, setAlunos] = useLocalStorage('alunos', mockData.alunos);
   const [alugueis, setAlugueis] = useLocalStorage('alugueis-ct', []); // NOVO ESTADO
   const [professores, setProfessores] = useLocalStorage('professores', mockData.professores);
+  const [gestores, setGestores] = useLocalStorage('gestores', mockData.gestores); // 🆕 NOVO ESTADO
   const [financeiro, setFinanceiro] = useLocalStorage('financeiro', mockData.financeiro);
   const [treinos, setTreinos] = useLocalStorage('treinos', mockData.treinos);
   const [unidades, setUnidades] = useLocalStorage('unidades', mockData.unidades);
@@ -503,6 +547,7 @@ const AppStateProvider = ({ children }) => {
   const value = useMemo(() => ({
     alunos, setAlunos,
     professores, setProfessores,
+    gestores, setGestores, // 🆕 NOVO ESTADO
     financeiro, setFinanceiro,
     treinos, setTreinos,
     unidades, setUnidades,
@@ -519,6 +564,7 @@ const AppStateProvider = ({ children }) => {
   }), [
     alunos, setAlunos,
     professores, setProfessores,
+    gestores, setGestores, // 🆕 NOVO ESTADO
     financeiro, setFinanceiro,
     treinos, setTreinos,
     unidades, setUnidades,
@@ -1513,7 +1559,7 @@ const DataTable = memo(({
 // Login melhorado
 const LoginModal = memo(() => {
   const { isDarkMode } = useTheme();
-  const { setUserLogado, setTipoUsuario, alunos, professores } = useAppState();
+  const { setUserLogado, setTipoUsuario, alunos, professores, gestores } = useAppState(); // 🆕 Adicionado gestores
   const { addNotification } = useNotifications();
   
   const [loginData, setLoginData] = useState({ email: '', senha: '' });
@@ -1572,6 +1618,19 @@ const LoginModal = memo(() => {
         return;
       }
 
+      // 🆕 Verificar se é um gestor
+      const gestor = gestores.find(g => g.email === email && g.senha === senha && g.ativo);
+      if (gestor) {
+        setUserLogado(gestor);
+        setTipoUsuario('gestor');
+        addNotification({
+          type: 'success',
+          title: 'Login realizado',
+          message: `Bem-vindo, ${gestor.nome}! Gestor da unidade ${gestor.unidadeResponsavel}`
+        });
+        return;
+      }
+
       const aluno = alunos.find(a => a.email === email && a.senha === senha);
       if (aluno) {
         setUserLogado(aluno);
@@ -1600,7 +1659,7 @@ const LoginModal = memo(() => {
     } finally {
       setLoading(false);
     }
-  }, [validateForm, loginData, setUserLogado, setTipoUsuario, professores, alunos, addNotification]);
+  }, [validateForm, loginData, setUserLogado, setTipoUsuario, professores, gestores, alunos, addNotification]); // 🆕 Adicionado gestores
 
   const handleKeyPress = useCallback((e) => {
     if (e.key === 'Enter') {
@@ -1750,21 +1809,30 @@ const MenuSidebar = memo(({ isMobileOpen, setMobileOpen, isCollapsed }) => {
           id: 'dashboard', 
           label: tipoUsuario === 'aluno' ? 'Meu Painel' : 'Dashboard', 
           icon: BarChart3,
-          roles: ['admin', 'professor', 'aluno']
+          roles: ['admin', 'professor', 'aluno', 'gestor'] // 🆕 Adicionado gestor
         }
       ]
     });
 
-    // Seção Gestão de Pessoas (só admin)
-    if (tipoUsuario === 'admin') {
+    // Seção Gestão de Pessoas (admin e gestor)
+    if (tipoUsuario === 'admin' || tipoUsuario === 'gestor') { // 🆕 Adicionado gestor
+      const pessoasItems = [
+        { id: 'alunos', label: 'Alunos', icon: Users, roles: ['admin', 'gestor'], badge: { count: 120, color: 'blue' } }, // 🆕 Adicionado gestor
+        { id: 'professores', label: 'Professores', icon: User, roles: ['admin', 'gestor'] } // 🆕 Adicionado gestor
+      ];
+      
+      // 🆕 Apenas admin pode gerenciar gestores
+      if (tipoUsuario === 'admin') {
+        pessoasItems.push(
+          { id: 'gestores', label: 'Gestores', icon: Settings, roles: ['admin'] }
+        );
+      }
+      
       sections.push({
         id: 'pessoas',
         title: "👥 Pessoas",
         icon: Users,
-        items: [
-          { id: 'alunos', label: 'Alunos', icon: Users, roles: ['admin'], badge: { count: 120, color: 'blue' } },
-          { id: 'professores', label: 'Professores', icon: User, roles: ['admin'] }
-        ]
+        items: pessoasItems
       });
     }
 
@@ -1772,26 +1840,26 @@ const MenuSidebar = memo(({ isMobileOpen, setMobileOpen, isCollapsed }) => {
     // Seção Operacional - VERSÃO CORRIGIDA
 const operacionalItems = [];
 
-// Para ADMIN - itens específicos de administração
-if (tipoUsuario === 'admin') {
+// Para ADMIN e GESTOR - itens específicos de administração
+if (tipoUsuario === 'admin' || tipoUsuario === 'gestor') { // 🆕 Adicionado gestor
   operacionalItems.push(
     { 
       id: 'presenca', 
       label: '📋 Controle de Presença', 
       icon: CheckCircle, 
-      roles: ['admin'], 
+      roles: ['admin', 'gestor'], // 🆕 Adicionado gestor
       badge: { count: 8, color: 'orange' } 
     },
     { 
       id: 'agendamentos', 
       label: '📅 Gerenciar Agendamentos', 
       icon: Calendar, 
-      roles: ['admin'] 
+      roles: ['admin', 'gestor'] // 🆕 Adicionado gestor
     }
   );
 
- // NOVO: Adiciona o item de aluguel de quadras apenas se a opção estiver ativa
-  if (configs.modeloNegocio?.tipo === 'proprio_aluga') {
+ // NOVO: Adiciona o item de aluguel de quadras apenas se a opção estiver ativa (só admin)
+  if (tipoUsuario === 'admin' && configs.modeloNegocio?.tipo === 'proprio_aluga') { // 🆕 Só admin pode ver aluguel
     operacionalItems.push({
       id: 'aluguel_quadras',
       label: '🎾 Aluguel de Quadras',
@@ -1801,13 +1869,13 @@ if (tipoUsuario === 'admin') {
     }
 }
 
-// Para PROFESSORES E ALUNOS - aulas do dia
-if (tipoUsuario === 'professor' || tipoUsuario === 'aluno') {
+// Para PROFESSORES, GESTORES E ALUNOS - aulas do dia
+if (tipoUsuario === 'professor' || tipoUsuario === 'aluno' || tipoUsuario === 'gestor') { // 🆕 Adicionado gestor
   operacionalItems.push({
     id: 'aulas', 
     label: tipoUsuario === 'aluno' ? '🎯 Minhas Aulas' : '📚 Aulas do Dia', 
     icon: Calendar,
-    roles: ['professor', 'aluno']
+    roles: ['professor', 'aluno', 'gestor'] // 🆕 Adicionado gestor
   });
 }
 
@@ -1830,12 +1898,12 @@ if (tipoUsuario === 'professor' || tipoUsuario === 'aluno') {
           id: 'treinos', 
           label: tipoUsuario === 'professor' ? 'Meus Treinos' : 'Treinos', 
           icon: Edit3,
-          roles: ['admin', 'professor', 'aluno']
+          roles: ['admin', 'professor', 'aluno', 'gestor'] // 🆕 Adicionado gestor
         }
       ]
     });
 // No MenuSidebar, adicione após a seção de treinos:
-if (tipoUsuario === 'admin' || tipoUsuario === 'professor') {
+if (tipoUsuario === 'admin' || tipoUsuario === 'professor' || tipoUsuario === 'gestor') { // 🆕 Adicionado gestor
     sections.push({
       id: 'metas-secao',
       title: "🎯 GESTÃO DE METAS",
@@ -1845,7 +1913,7 @@ if (tipoUsuario === 'admin' || tipoUsuario === 'professor') {
           id: 'metas', 
           label: 'Metas do CT', 
           icon: Target, 
-          roles: ['admin'],
+          roles: ['admin', 'gestor'], // 🆕 Gestor pode ver metas da sua unidade
           badge: metasPendentes > 0 ? { count: metasPendentes, color: 'orange' } : undefined
         }
       ]
@@ -1857,8 +1925,8 @@ if (tipoUsuario === 'admin' || tipoUsuario === 'professor') {
         id: 'financeiro', 
         label: tipoUsuario === 'professor' ? 'Pagamentos' : 'Financeiro', 
         icon: DollarSign,
-        roles: ['admin', 'professor', 'aluno'],
-        badge: tipoUsuario === 'admin' ? { count: 3, color: 'red' } : null
+        roles: ['admin', 'professor', 'aluno', 'gestor'], // 🆕 Adicionado gestor
+        badge: tipoUsuario === 'admin' || tipoUsuario === 'gestor' ? { count: 3, color: 'red' } : null // 🆕 Gestor também vê badge
       }
     ];
 
@@ -2290,7 +2358,9 @@ const Header = memo(({ toggleMobileSidebar, toggleSidebarCollapse }) => {
           <div className="flex items-center space-x-2 sm:space-x-3">
             <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
               tipoUsuario === 'admin' ? 'bg-blue-600' : 
-              tipoUsuario === 'professor' ? 'bg-green-600' : 'bg-purple-600'
+              tipoUsuario === 'professor' ? 'bg-green-600' : 
+              tipoUsuario === 'gestor' ? 'bg-orange-600' : // 🆕 Cor para gestor
+              'bg-purple-600'
             }`}>
               <User className="text-white" size={16} />
             </div>
