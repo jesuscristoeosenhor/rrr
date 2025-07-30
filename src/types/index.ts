@@ -391,11 +391,14 @@ export interface ThemeContextType {
 }
 
 export interface NotificationContextType {
-  notifications: Notification[];
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
+  notifications: NotificationData[];
+  toastNotifications?: NotificationData[];
+  addNotification: (notification: Omit<NotificationData, 'id' | 'criadoEm' | 'atualizadoEm'>) => void;
   removeNotification: (id: string) => void;
   markAsRead: (id: string) => void;
+  markAllAsRead?: () => void;
   clearAll: () => void;
+  unreadCount?: number;
 }
 
 export interface AuthContextType {
