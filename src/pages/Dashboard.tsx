@@ -46,7 +46,7 @@ export const Dashboard = memo(() => {
   // Calculate statistics
   const totalAlunos = alunos.length;
   const alunosAtivos = alunos.filter(a => a.status === 'ativo').length;
-  const professoresAtivos = professores.filter(p => p.status === 'ativo').length;
+  const professoresAtivos = professores.filter(p => p.ativo === true).length;
   
   // Mock financial data - in production this would come from financial records
   const receitaMensal = 25000;
