@@ -19,6 +19,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       id: generateId(),
       timestamp: new Date(),
       autoClose: notification.autoClose ?? true,
+      read: false,
     };
 
     setNotifications(prev => [...prev, newNotification]);
@@ -26,20 +27,42 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     // Auto-remove notification after 5 seconds if autoClose is true
     if (newNotification.autoClose) {
       setTimeout(() => {
-        removeNotification(newNotification.id);
+        removeNotification(String(newNotification.id));
       }, 5000);
     }
   }, []);
 
   const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setNotifications(prev => prev.filter(notification => String(notification.id) !== id));
   }, []);
+
+  const markAsRead = useCallback((id: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        String(notification.id) === id 
+          ? { ...notification, read: true } 
+          : notification
+      )
+    );
+  }, []);
+
+  const clearNotifications = useCallback(() => {
+    setNotifications([]);
+  }, []);
+
+  const unreadCount = useMemo(() => 
+    notifications.filter(n => !n.read).length, 
+    [notifications]
+  );
 
   const value = useMemo(() => ({
     notifications,
     addNotification,
     removeNotification,
-  }), [notifications, addNotification, removeNotification]);
+    markAsRead,
+    clearNotifications,
+    unreadCount,
+  }), [notifications, addNotification, removeNotification, markAsRead, clearNotifications, unreadCount]);
 
   return (
     <NotificationContext.Provider value={value}>

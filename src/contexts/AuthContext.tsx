@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     setIsLoading(true);
     try {
-      await authService.changePassword(user.id, oldPassword, newPassword);
+      await authService.changePassword(String(user.id), oldPassword, newPassword);
       toast.success('Senha alterada com sucesso');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao alterar senha';
