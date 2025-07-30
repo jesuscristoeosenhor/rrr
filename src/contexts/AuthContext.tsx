@@ -1,18 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { Usuario } from '@/types';
+import { Usuario, AuthContextType } from '@/types';
 import { authService } from '@/services/authService';
+import { securityService } from '@/services/securityService';
 import { toast } from 'react-hot-toast';
-
-interface AuthContextType {
-  user: Usuario | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  register: (userData: any) => Promise<void>;
-  changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
-  hasPermission: (action: string, resource: string) => boolean;
-}
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -28,12 +18,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
+        const token = localStorage.getItem('auth_token');
+        if (token && securityService.isTokenValid(token)) {
+          const currentUser = await authService.getCurrentUser();
+          if (currentUser) {
+            setUser(currentUser);
+            // Update last login time
+            await authService.updateLastLogin(currentUser.id);
+          }
+        } else {
+          // Clear invalid tokens
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('refresh_token');
+        }
       } catch (error) {
         console.error('Auth check failed:', error);
-        // Clear invalid tokens
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
       } finally {
         setIsLoading(false);
       }
@@ -42,73 +43,108 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  // Token refresh logic
+  useEffect(() => {
+    if (user) {
+      const refreshInterval = setInterval(async () => {
+        try {
+          const refreshToken = localStorage.getItem('refresh_token');
+          if (refreshToken) {
+            const result = await authService.refreshToken(refreshToken);
+            localStorage.setItem('auth_token', result.token);
+            if (result.refreshToken) {
+              localStorage.setItem('refresh_token', result.refreshToken);
+            }
+          }
+        } catch (error) {
+          console.error('Token refresh failed:', error);
+          logout();
+        }
+      }, 15 * 60 * 1000); // Refresh every 15 minutes
+
+      return () => clearInterval(refreshInterval);
+    }
+  }, [user]);
+
+  const login = useCallback(async (email: string, senha: string): Promise<boolean> => {
     setIsLoading(true);
+    
     try {
-      const result = await authService.login({ email, senha: password });
-      if (result) {
+      // Security checks
+      if (await securityService.isAccountLocked(email)) {
+        throw new Error('Conta temporariamente bloqueada por múltiplas tentativas de login');
+      }
+
+      const result = await authService.login({ email, senha });
+      
+      if (result.success && result.user) {
         setUser(result.user);
         localStorage.setItem('auth_token', result.token);
+        if (result.refreshToken) {
+          localStorage.setItem('refresh_token', result.refreshToken);
+        }
+        
+        // Log successful login
+        await securityService.logLoginAttempt(email, true);
+        
         toast.success(`Bem-vindo, ${result.user.nome}!`);
+        return true;
+      } else {
+        await securityService.logLoginAttempt(email, false);
+        throw new Error(result.message || 'Credenciais inválidas');
       }
     } catch (error) {
+      await securityService.logLoginAttempt(email, false);
       const message = error instanceof Error ? error.message : 'Erro ao fazer login';
       toast.error(message);
-      throw error;
+      return false;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   const logout = useCallback(() => {
+    const userNome = user?.nome;
+    
     authService.logout();
     setUser(null);
-    toast.success('Logout realizado com sucesso');
-  }, []);
+    
+    // Clear all auth tokens
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    
+    toast.success(`Até logo${userNome ? `, ${userNome}` : ''}!`);
+  }, [user]);
 
-  const register = useCallback(async (userData: any) => {
-    setIsLoading(true);
-    try {
-      await authService.register(userData);
-      toast.success('Usuário registrado com sucesso');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao registrar usuário';
-      toast.error(message);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const changePassword = useCallback(async (oldPassword: string, newPassword: string) => {
-    if (!user) throw new Error('Usuário não autenticado');
-
-    setIsLoading(true);
-    try {
-      await authService.changePassword(user.id, oldPassword, newPassword);
-      toast.success('Senha alterada com sucesso');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao alterar senha';
-      toast.error(message);
-      throw error;
-    } finally {
-      setIsLoading(false);
+  const updateUser = useCallback((userData: Partial<Usuario>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData, atualizadoEm: new Date() };
+      setUser(updatedUser);
     }
   }, [user]);
 
-  const hasPermission = useCallback((action: string, resource: string): boolean => {
+  const hasPermission = useCallback((modulo: string, acao: string): boolean => {
     if (!user) return false;
-    return authService.hasPermission(user, action, resource);
+    
+    // Super admin has all permissions
+    if (user.tipo === 'admin') return true;
+    
+    // Check specific permissions
+    if (user.permissoes) {
+      const moduloPermission = user.permissoes.find(p => p.modulo === modulo);
+      return moduloPermission?.acoes.includes(acao as any) || false;
+    }
+    
+    // Default role-based permissions
+    return authService.checkDefaultPermissions(user.tipo, modulo, acao);
   }, [user]);
 
   const value: AuthContextType = {
     user,
     isLoading,
-    isAuthenticated: !!user,
     login,
     logout,
-    register,
-    changePassword,
+    updateUser,
     hasPermission,
   };
 
